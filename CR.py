@@ -1,11 +1,11 @@
 class CR:
-    radius = 20
+    radius = 3
 
-    def __init__(self, posx, posy, c):
+    def __init__(self, posx, posy, cw, c):
         self.posx = posx
         self.posy = posy
 
-        c.create_oval(posx-self.radius, posy-self.radius,
-                      posx+self.radius, posy+self.radius,
+        circle = c.create_oval(posx-cw*self.radius, posy-cw*self.radius,
+                      posx+cw*self.radius, posy+cw*self.radius,
                        fill="black" )
     

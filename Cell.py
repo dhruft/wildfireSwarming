@@ -27,3 +27,5 @@ class Cell:
                 fill=color)
         else:
             self.c.itemconfig(self.r, fill=color)
+        
+        self.c.tag_lower(self.r)
