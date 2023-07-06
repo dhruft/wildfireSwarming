@@ -34,7 +34,7 @@ class App(object):
         loop = asyncio.new_event_loop()
 
         t = Thread(target=self.startLoop, args=(loop,))
-        t.setDaemon(True)
+        t.daemon = True
         t.start()
 
         self.CR = CR.CR(cw*gridx/2, cw*gridy/2,

@@ -2,7 +2,6 @@
 # is reduced while maintaining maximum totalAge
 
 import random
-import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import DBSCAN
