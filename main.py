@@ -1,81 +1,57 @@
-from focus import getFocusPoint
-import SMR
-from SMR import *
-import CR
+import UAV
+from UAV import *
 import Cell
 
-import math
-import tkinter as tk
-import asyncio
-from threading import Thread
-
-gridx = 50
-gridy = 50
-cw = 10
-grid = []
-
+from vars import *
+from DBScan import assignClusters
 # make global variables
 # move start loop and increment loop into Cell.py
-# add an array of SMRs and fix variables and scopes and stuff
-
+# add an array of UAVs and fix variables and scopes and stuff
 
 class App(object):
 
     def __init__(self, master, **kwargs):
         self.master = master
         
-        master.title("Wildfire Swarming Simulation")
-        self.c = tk.Canvas(self.master, width=gridx*cw, height=gridy*cw, bg="light gray")
+        master.title("Forest Swarming Simulation")
 
-        self.c.pack(fill="both", expand=1)
+        canvas[0] = tk.Canvas(self.master, width=gridx*cw, height=gridy*cw, bg="light gray")
+
+        canvas[0].pack(fill="both", expand=1)
         self.master.after(0,self.mainloop)
     
     def mainloop(self):
-        loop = asyncio.new_event_loop()
+        self.gridInit()
 
-        t = Thread(target=self.startLoop, args=(loop,))
-        t.daemon = True
-        t.start()
-
-        self.CR = CR.CR(cw*gridx/2, cw*gridy/2,
-                         cw, self.c)
-
-        #for angle in range(0, 2*math.pi, math.pi/4):
+        uavs = []
+        angle = 0
+        while angle < 2*math.pi:
+            uavs.append(UAV(math.ceil(gridx/2) + int(gridx/2)*math.cos(angle), math.ceil(gridy/2) + int(gridy/2)*math.sin(angle)))
+            angle += 2*math.pi/uavCount
 
         loop = asyncio.new_event_loop()
-
-        smr1 = SMR(10,10,cw,self.c)
-        smr2 = SMR(10,30,cw,self.c)
-
-        t = Thread(target=smrLoop, args=(loop,smr1,smr2))
+        t = Thread(target=uavLoop, args=(loop,uavs))
         t.setDaemon(True)
         t.start()
-        
-        
-    def startLoop(self,loop):
-        asyncio.set_event_loop(loop)
-
-        for posx in range(0, gridx*cw, cw):
+    
+    def gridInit(self):
+        for posx in range(1, gridx+1):
             row = []
-            for posy in range(0, gridy*cw, cw):
-                newCell = Cell.Cell(posx, posy, self.c, cw)
+            for posy in range(1, gridy+1):
+                status = random.random()
+                status = 1 if status < treeProb else 0
+
+                isCR = math.ceil(gridx/2)-crRadius <= posx and posx <= math.ceil(gridx/2)+crRadius and math.ceil(gridy/2)-crRadius <= posy and posy <= math.ceil(gridy/2)+crRadius
+
+                newCell = Cell.Cell(posx, posy, status, isCR)
                 row.append(newCell)
+
+                if status and not isCR:
+                    trees.append(newCell)
+
             grid.append(row)
 
-        loop.create_task(self.incrementCells())
-
-        loop.run_forever()
-    
-    async def incrementCells(self):
-        while True:
-            for row in grid:
-                for cell in row:
-                    cell.age += 1.5
-                    cell.update()
-            self.c.update()
-            await asyncio.sleep(2)
-
-                  
+        assignClusters()        
 
 root = tk.Tk()
 app = App(root)
