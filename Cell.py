@@ -22,14 +22,20 @@ class Cell:
                 fill=color)
         c.tag_lower(self.r)
 
-    def update(self):
+    def visit(self):
         c.itemconfig(self.r, fill=bgColor)
         c.tag_lower(self.r)
 
     def setCluster(self, clusterNum):
         self.cluster = clusterNum
-        c.itemconfig(self.r, fill=colors[clusterNum])
+        c.itemconfig(self.r, fill=clusters[clusterNum]["color"])
+    
+    def white(self):
+        c.itemconfig(self.r, fill="white")
     
     def black(self):
         c.itemconfig(self.r, fill="black")
+
+    def red(self):
+        c.itemconfig(self.r, fill="red")
         

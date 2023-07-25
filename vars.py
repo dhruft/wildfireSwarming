@@ -15,8 +15,17 @@ grid = []
 
 ti = 0.01
 uavCount = 8
-crRadius = 2
 treeProb = 0.02
+vel = 7
+startFuel = 75
+tRange = 15
+uRange = 25
+
+crRadius = 2
+uavRadius = 1
+
+center = [math.ceil(gridx/2), math.ceil(gridy/2)]
+
 trees = []
 canvas = [0]
-colors = {}
+clusters = {}

@@ -26,7 +26,7 @@ class App(object):
         uavs = []
         angle = 0
         while angle < 2*math.pi:
-            uavs.append(UAV(math.ceil(gridx/2) + int(gridx/2)*math.cos(angle), math.ceil(gridy/2) + int(gridy/2)*math.sin(angle)))
+            uavs.append(UAV(center[0] + int(gridx/2)*math.cos(angle), center[1] + int(gridy/2)*math.sin(angle)))
             angle += 2*math.pi/uavCount
 
         loop = asyncio.new_event_loop()
@@ -35,18 +35,18 @@ class App(object):
         t.start()
     
     def gridInit(self):
-        for posx in range(1, gridx+1):
+        for posy in range(1, gridy+1):
             row = []
-            for posy in range(1, gridy+1):
-                status = random.random()
-                status = 1 if status < treeProb else 0
+            for posx in range(1, gridx+1):
+                isCR = center[0]-crRadius <= posx and posx <= center[0]+crRadius and center[1]-crRadius <= posy and posy <= center[1]+crRadius
 
-                isCR = math.ceil(gridx/2)-crRadius <= posx and posx <= math.ceil(gridx/2)+crRadius and math.ceil(gridy/2)-crRadius <= posy and posy <= math.ceil(gridy/2)+crRadius
+                status = random.random()
+                status = 1 if status < treeProb and not isCR else 0
 
                 newCell = Cell.Cell(posx, posy, status, isCR)
                 row.append(newCell)
 
-                if status and not isCR:
+                if status:
                     trees.append(newCell)
 
             grid.append(row)
