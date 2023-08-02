@@ -3,7 +3,7 @@ from UAV import *
 import Cell
 
 from vars import *
-from DBScan import assignClusters
+from DensityCalc import assignDensities
 # make global variables
 # move start loop and increment loop into Cell.py
 # add an array of UAVs and fix variables and scopes and stuff
@@ -24,10 +24,12 @@ class App(object):
         self.gridInit()
 
         uavs = []
-        angle = 0
-        while angle < 2*math.pi:
-            uavs.append(UAV(center[0] + int(gridx/2)*math.cos(angle), center[1] + int(gridy/2)*math.sin(angle)))
-            angle += 2*math.pi/uavCount
+        # angle = 0
+        # while angle < 2*math.pi:
+        #     uavs.append(UAV(center[0] + int(gridx/2)*math.cos(angle), center[1] + int(gridy/2)*math.sin(angle)))
+        #     angle += 2*math.pi/uavCount
+        for i in range(uavCount):
+            uavs.append(UAV(*center))
 
         loop = asyncio.new_event_loop()
         t = Thread(target=uavLoop, args=(loop,uavs))
@@ -36,22 +38,18 @@ class App(object):
     
     def gridInit(self):
         for posy in range(1, gridy+1):
-            row = []
             for posx in range(1, gridx+1):
                 isCR = center[0]-crRadius <= posx and posx <= center[0]+crRadius and center[1]-crRadius <= posy and posy <= center[1]+crRadius
 
-                status = random.random()
-                status = 1 if status < treeProb and not isCR else 0
+                isTree = random.random()
+                isTree = 1 if isTree < treeProb and not isCR else 0
 
-                newCell = Cell.Cell(posx, posy, status, isCR)
-                row.append(newCell)
+                newCell = Cell.Cell(posx, posy, isTree, isCR)
+                grid[posy-1][posx-1] = newCell
 
-                if status:
+                if isTree:
                     trees.append(newCell)
-
-            grid.append(row)
-
-        assignClusters()        
+        assignDensities()        
 
 root = tk.Tk()
 app = App(root)

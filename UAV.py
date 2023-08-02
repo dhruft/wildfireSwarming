@@ -12,21 +12,35 @@ def uavLoop(loop, uavs):
 
     loop.run_forever()
 
-def getDist(x1,y1,x2,y2):
-        return math.sqrt((x2-x1)**2 + (y2-y1)**2)
-
 def centerToCircle(x,y,radius):
     return (x*cw-cw/2-cw*radius, y*cw-cw/2-cw*radius,
                       x*cw-cw/2+cw*radius, y*cw-cw/2+cw*radius)
 
-# if flip is True, then lower values = higher priority, meaning
-# the normalize function should return larger numbers for lower values
-def normalize(value, vRange, flip):
-    dec = (value-vRange[0])/(vRange[1]-vRange[0])
-    dec = min(1, dec)
+def chooseTarget():
+    x = random.randint(*random.choice([ [1,math.floor(center[0]-homeRadius)],[math.ceil(center[0]+homeRadius), gridx] ]))
+    y = random.randint(*random.choice([ [1,math.floor(center[1]-homeRadius)],[math.ceil(center[1]+homeRadius), gridy] ]))
 
-    if flip: dec = 1.0 - dec
-    return dec
+    return [x,y]
+
+def previewField(field, x, y):
+    top = y-tRange
+    left = x-tRange
+
+    cmap = cm.Blues
+    norm = matplotlib.colors.Normalize(vmin=0, vmax=1)
+
+    for row in range(len(field)):
+        for pos in range(len(field[0])):
+            gridYpos = top + row
+            gridXpos = left + pos
+
+            if gridYpos < 1 or gridYpos > gridy or gridXpos < 1 or gridXpos > gridx:
+                continue
+
+            rgb = cmap(norm(abs(max(0,field[row][pos]))))[:3]  # will return rgba, we take only first 3 so we get rgb
+            color = matplotlib.colors.rgb2hex(rgb)
+
+            grid[gridYpos-1][gridXpos-1].setColor(color)
 
 class UAV:
     
@@ -45,42 +59,174 @@ class UAV:
         c.coords(self.circle, centerToCircle(self.posx,self.posy,uavRadius))
     
     async def mainLoop(self):
+        target = chooseTarget()
+
+        await self.goTo(*target)
+
+        if self.cell.isTree:
+            self.fuel -= collectionFuelLoss
+            self.cell.visit()
+
+        await asyncio.sleep(2)
+
+        # field = self.fieldOverlay()
+        # previewField(field, self.posx, self.posy)
+
         while self.fuel > 0:
-            maskList = self.getMaskList(tRange)
+            field = self.fieldOverlay()
+            previewField(field, self.posx, self.posy)
+            # Step 3: Find the index of the minimum value in the flattened array
+            maxInd = np.argmax(field)
 
-            # TO BE CHANGED!!! consider edge case interactions between neighboring robots
-            # e.g. one of them are both robots are fighting over one resource, one gets it
-            # other moves to center
-            if self.posx == center[0] and self.posy == center[1]:
+            # Step 4: Convert the index to a 2D coordinate
+            maxPos = np.unravel_index(maxInd, field.shape)
+
+            if field[maxPos] <= 0:
+                await self.goTo(*center)
                 break
-            elif len(maskList) == 0:
-                await self.moveToCenter()
             else:
-                target = maskList[0]
-                target.status = 0
-                clusters[target.cluster]["size"] -= 1
-                await asyncio.sleep(1)
-                await self.goTo(target.posx, target.posy)
-                target.visit()
+                left = self.posx - tRange
+                top = self.posy - tRange
 
+                target = [left+maxPos[1], top+maxPos[0]]
+                await self.goTo(*target)
+                if self.cell.isTree:
+                    self.cell.visit()
+                else:
+                    print("FAILURE!!!!")
+                    print(field, target)
+                self.fuel -= collectionFuelLoss
+                await asyncio.sleep(2)
+        
         await self.goTo(*center)
+        
+        field = self.fieldOverlay()
+        #previewField(field, self.posx, self.posy)
+        updatePlot()
 
-    def getMaskList(self,searchRadius):
-        maskList = []
-        cx = round(self.posx)
-        cy = round(self.posy)
-        for sx in range(max(0,cx-searchRadius),min(gridx,cx+searchRadius+1)):
-            for sy in range(max(0,cy-searchRadius), min(gridy,cy+searchRadius+1)):
-                cell = grid[sy-1][sx-1]
-
-                if ((cx-sx)**2 + (cy-sy)**2 < searchRadius**2) and cell.status:
-                    maskList.append(cell)
+        #DURING LOOP, if height is already known, update thresholds immediatley otherwise wait until you get there
 
 
-        maskList = sorted(maskList, key=lambda tree: self.scoreTree(tree), reverse=True)
+        # while self.fuel > 0:
+        #     maskList = self.getMaskList(tRange)
 
-        ## SORT BASED ON TREE SCORES
-        return maskList
+        #     # TO BE CHANGED!!! consider edge case interactions between neighboring robots
+        #     # e.g. one of them are both robots are fighting over one resource, one gets it
+        #     # other moves to center
+        #     if self.posx == center[0] and self.posy == center[1]:
+        #         break
+        #     elif len(maskList) == 0:
+        #         await self.moveToCenter()
+        #     else:
+        #         target = maskList[0]
+        #         target.status = 0
+        #         clusters[target.cluster]["size"] -= 1
+        #         await asyncio.sleep(1)
+        #         await self.goTo(target.posx, target.posy)
+        #         target.visit()
+
+        # await self.goTo(*center)
+
+    def fieldOverlay(self):
+        #previewField(proximityField, self.posx, self.posy)
+
+        proximityField = np.zeros(shape=[tRange*2+1, tRange*2+1])
+        pCenter = [tRange, tRange]
+        left = self.posx - tRange
+        top = self.posy - tRange
+        for y in range(2*tRange+1):
+            for x in range(2*tRange+1):
+                gridYpos = top+y
+                gridXpos = left+x
+
+                if gridYpos < 1 or gridYpos > gridy or gridXpos < 1 or gridXpos > gridx or (gridYpos == self.posy+1 and gridXpos == self.posx+1):
+                    continue
+
+                value = getDist(*pCenter, x, y)
+                maxValue = getDist(*pCenter, 0, 0)
+                if value==0 or not grid[gridYpos-1][gridXpos-1].isTree:
+                    value = maxValue
+                proximityField[y][x] = normalize(value, [0, maxValue], True)
+
+        # for homeField generation, calculated here to reduce time complexity
+        infoField = np.zeros(shape=[tRange*2+1, tRange*2+1])
+        left = self.posx - tRange
+        top = self.posy - tRange
+        for y in range(2*tRange+1):
+            for x in range(2*tRange+1):
+                gridYpos = top+y
+                gridXpos = left+x
+
+                if gridYpos < 1 or gridYpos > gridy or gridXpos < 1 or gridXpos > gridx or (gridYpos == self.posy+1 and gridXpos == self.posx+1):
+                    infoField[y][x] = -1
+                    continue
+
+                cell = grid[gridYpos - 1][gridXpos - 1]
+                if self.fuel - collectionFuelLoss < getDist(*center, gridXpos, gridYpos)+getDist(self.posx, self.posy, gridXpos, gridYpos) or not cell.isTree or [gridXpos, gridYpos] == [self.posx, self.posy]:
+                    infoField[y][x] = -1
+                    continue
+
+                if cell.heightKnown:
+                    value = 1 - threshold[cell.height-heightRange[0]][cell.density]
+                else:
+                    value = 1 - densityThreshold[cell.density]
+
+                infoField[y][x] = value
+
+                #problem: sometimes it keeps going back to the same cell because height known vs not known weights are
+                # not comparing well (height known keeps being more attractive especially near the end)
+#self.fuel < getDist(*center, gridXpos, gridYpos)+getDist(self.posx, self.posy, gridXpos, gridYpos) or
+        homeField = np.zeros(shape=[tRange*2+1, tRange*2+1])
+        # left = self.posx - tRange
+        # top = self.posy - tRange
+        # fuelImportance = 2*getDist(*center, self.posx, self.posy)/self.fuel
+        # #print(fuelImportance)
+        # for y in range(2*tRange+1):
+        #     for x in range(2*tRange+1):
+        #         gridYpos = top+y
+        #         gridXpos = left+x
+
+        #         if gridYpos < 1 or gridYpos > gridy or gridXpos < 1 or gridXpos > gridx or (gridYpos == self.posy+1 and gridXpos == self.posx+1):
+        #             continue
+
+        #         cell = grid[gridYpos - 1][gridXpos - 1]
+                
+        #         if self.fuel < getDist(*center, gridXpos, gridYpos)+getDist(self.posx, self.posy, gridXpos, gridYpos) or not cell.isTree:
+        #             homeField[y][x] = -10000
+        #             continue
+
+        #         value = fuelImportance*normalize(getDist(*center, gridXpos, gridYpos), [0,maxCenterDist], True)
+        #         homeField[y][x] = value
+        
+        #previewField(infoField, self.posx, self.posy)
+
+        infoWeight = 0.65
+        proximityWeight = 0.35
+        fuelWeight = 0
+
+        return infoWeight*infoField + proximityWeight*proximityField + fuelWeight*homeField
+        
+        # overlay three fields each target and run gradient descent, build new field
+        # for cell in circle, get cell value for each field and build new field
+    
+        # threshold field, distance to uav field, distance to center
+
+
+        # maskList = []
+        # cx = round(self.posx)
+        # cy = round(self.posy)
+        # for sx in range(max(0,cx-searchRadius),min(gridx,cx+searchRadius+1)):
+        #     for sy in range(max(0,cy-searchRadius), min(gridy,cy+searchRadius+1)):
+        #         cell = grid[sy-1][sx-1]
+
+        #         if ((cx-sx)**2 + (cy-sy)**2 < searchRadius**2) and cell.status:
+        #             maskList.append(cell)
+
+
+        # maskList = sorted(maskList, key=lambda tree: self.scoreTree(tree), reverse=True)
+
+        # ## SORT BASED ON TREE SCORES
+        # return maskList
     
     def scoreTree(self, tree):
         # distance to center, current fuel, distance to drone, cluster size
@@ -132,6 +278,7 @@ class UAV:
     async def goTo(self, x, y):
         self.target = [x,y]
         self.fuel -= getDist(x,y,self.posx,self.posy)
+        self.cell = grid[y-1][x-1]
 
         while self.posx != x or self.posy != y:
             await asyncio.sleep(ti)
