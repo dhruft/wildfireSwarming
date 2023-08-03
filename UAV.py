@@ -130,23 +130,23 @@ class UAV:
     def fieldOverlay(self):
         #previewField(proximityField, self.posx, self.posy)
 
-        proximityField = np.zeros(shape=[tRange*2+1, tRange*2+1])
-        pCenter = [tRange, tRange]
-        left = self.posx - tRange
-        top = self.posy - tRange
-        for y in range(2*tRange+1):
-            for x in range(2*tRange+1):
-                gridYpos = top+y
-                gridXpos = left+x
+        # proximityField = np.zeros(shape=[tRange*2+1, tRange*2+1])
+        # pCenter = [tRange, tRange]
+        # left = self.posx - tRange
+        # top = self.posy - tRange
+        # for y in range(2*tRange+1):
+        #     for x in range(2*tRange+1):
+        #         gridYpos = top+y
+        #         gridXpos = left+x
 
-                if gridYpos < 1 or gridYpos > gridy or gridXpos < 1 or gridXpos > gridx or (gridYpos == self.posy+1 and gridXpos == self.posx+1):
-                    continue
+        #         if gridYpos < 1 or gridYpos > gridy or gridXpos < 1 or gridXpos > gridx or (gridYpos == self.posy+1 and gridXpos == self.posx+1):
+        #             continue
 
-                value = getDist(*pCenter, x, y)
-                maxValue = getDist(*pCenter, 0, 0)
-                if value==0 or not grid[gridYpos-1][gridXpos-1].isTree:
-                    value = maxValue
-                proximityField[y][x] = normalize(value, [0, maxValue], True)
+        #         value = getDist(*pCenter, x, y)
+        #         maxValue = getDist(*pCenter, 0, 0)
+        #         if value==0 or not grid[gridYpos-1][gridXpos-1].isTree:
+        #             value = maxValue
+        #         proximityField[y][x] = normalize(value, [0, maxValue], True)
 
         # for homeField generation, calculated here to reduce time complexity
         infoField = np.zeros(shape=[tRange*2+1, tRange*2+1])
@@ -176,7 +176,7 @@ class UAV:
                 #problem: sometimes it keeps going back to the same cell because height known vs not known weights are
                 # not comparing well (height known keeps being more attractive especially near the end)
 #self.fuel < getDist(*center, gridXpos, gridYpos)+getDist(self.posx, self.posy, gridXpos, gridYpos) or
-        homeField = np.zeros(shape=[tRange*2+1, tRange*2+1])
+        #homeField = np.zeros(shape=[tRange*2+1, tRange*2+1])
         # left = self.posx - tRange
         # top = self.posy - tRange
         # fuelImportance = 2*getDist(*center, self.posx, self.posy)/self.fuel
@@ -202,9 +202,8 @@ class UAV:
 
         infoWeight = 0.65
         proximityWeight = 0.35
-        fuelWeight = 0
 
-        return infoWeight*infoField + proximityWeight*proximityField + fuelWeight*homeField
+        return infoWeight*infoField + proximityWeight*proximityField
         
         # overlay three fields each target and run gradient descent, build new field
         # for cell in circle, get cell value for each field and build new field
@@ -287,6 +286,8 @@ class UAV:
             distTraveled = vel*ti
             sideRatio = (dist-distTraveled)/dist
 
+            oldPos = [self.posx, self.posy]
+
             if dist <= distTraveled:
                 self.posx = x
                 self.posy = y
@@ -295,6 +296,12 @@ class UAV:
                 self.posy = y-(y-self.posy)*sideRatio
 
             self.update()
+            c.create_line(*posWithCW(oldPos), *posWithCW([self.posx, self.posy]), fill="black", width=2)
 
     def sendInfo(self):
         return {"target":self.target, "fuel":self.fuel, "maskList":self.getMaskList(10)}
+    
+def posWithCW(pos):
+    x = pos[0]*cw - cw/2
+    y = pos[1]*cw - cw/2
+    return [x,y]

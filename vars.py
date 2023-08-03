@@ -77,12 +77,12 @@ def getDist(x1,y1,x2,y2):
         return math.sqrt((x2-x1)**2 + (y2-y1)**2)
 
 #build proximity field for uavs
-# proximityField = np.empty(shape=[tRange*2+1, tRange*2+1])
-# pCenter = [tRange, tRange]
-# for y in range(2*tRange+1):
-#     for x in range(2*tRange+1):
-#         value = getDist(*pCenter, x, y)
-#         maxValue = getDist(*pCenter, 0, 0)
-#         if value==0:
-#              value = maxValue
-#         proximityField[y][x] = normalize(value, [0, maxValue], True)
+proximityField = np.zeros(shape=[tRange*2+1, tRange*2+1])
+pCenter = [tRange, tRange]
+for y in range(2*tRange+1):
+    for x in range(2*tRange+1):
+        value = getDist(*pCenter, x, y)
+        maxValue = getDist(*pCenter, 0, 0)
+        if value==0:
+             value = maxValue
+        proximityField[y][x] = normalize(value, [0, maxValue], True)
