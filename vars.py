@@ -18,12 +18,13 @@ grid = np.empty(shape=(gridy, gridx), dtype=object)
 ti = 0.01
 center = [math.ceil(gridx/2), math.ceil(gridy/2)]
 
-uavCount = 8
-vel = 7
+uavCount = 24
+vel = 10
 startFuel = 300
 tRange = 15
 certaintyRange = [0.6, 0.9]
 collectionFuelLoss = 10
+collectionTime = 2
 
 homeRadius = 10
 crRadius = 1

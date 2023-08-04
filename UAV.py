@@ -1,9 +1,5 @@
 from vars import *
 
-## BUG: UAVS RANDOMLYY GO ACROSS THE MAP IDK WHY WHAT IS THIS BRUH
-# MULTIPLE TARGETS WHAT!??!?!??!
-# SOMEHWO TRADING TARGETS???!?! 
-
 def uavLoop(loop, uavs):
     asyncio.set_event_loop(loop)
 
@@ -67,14 +63,14 @@ class UAV:
             self.fuel -= collectionFuelLoss
             self.cell.visit()
 
-        await asyncio.sleep(2)
+        await asyncio.sleep(collectionTime)
 
         # field = self.fieldOverlay()
         # previewField(field, self.posx, self.posy)
 
         while self.fuel > 0:
             field = self.fieldOverlay()
-            previewField(field, self.posx, self.posy)
+            #previewField(field, self.posx, self.posy)
             # Step 3: Find the index of the minimum value in the flattened array
             maxInd = np.argmax(field)
 
@@ -96,7 +92,7 @@ class UAV:
                     print("FAILURE!!!!")
                     print(field, target)
                 self.fuel -= collectionFuelLoss
-                await asyncio.sleep(2)
+                await asyncio.sleep(collectionTime)
         
         await self.goTo(*center)
         
@@ -107,48 +103,9 @@ class UAV:
         #DURING LOOP, if height is already known, update thresholds immediatley otherwise wait until you get there
 
 
-        # while self.fuel > 0:
-        #     maskList = self.getMaskList(tRange)
-
-        #     # TO BE CHANGED!!! consider edge case interactions between neighboring robots
-        #     # e.g. one of them are both robots are fighting over one resource, one gets it
-        #     # other moves to center
-        #     if self.posx == center[0] and self.posy == center[1]:
-        #         break
-        #     elif len(maskList) == 0:
-        #         await self.moveToCenter()
-        #     else:
-        #         target = maskList[0]
-        #         target.status = 0
-        #         clusters[target.cluster]["size"] -= 1
-        #         await asyncio.sleep(1)
-        #         await self.goTo(target.posx, target.posy)
-        #         target.visit()
-
-        # await self.goTo(*center)
-
     def fieldOverlay(self):
         #previewField(proximityField, self.posx, self.posy)
 
-        # proximityField = np.zeros(shape=[tRange*2+1, tRange*2+1])
-        # pCenter = [tRange, tRange]
-        # left = self.posx - tRange
-        # top = self.posy - tRange
-        # for y in range(2*tRange+1):
-        #     for x in range(2*tRange+1):
-        #         gridYpos = top+y
-        #         gridXpos = left+x
-
-        #         if gridYpos < 1 or gridYpos > gridy or gridXpos < 1 or gridXpos > gridx or (gridYpos == self.posy+1 and gridXpos == self.posx+1):
-        #             continue
-
-        #         value = getDist(*pCenter, x, y)
-        #         maxValue = getDist(*pCenter, 0, 0)
-        #         if value==0 or not grid[gridYpos-1][gridXpos-1].isTree:
-        #             value = maxValue
-        #         proximityField[y][x] = normalize(value, [0, maxValue], True)
-
-        # for homeField generation, calculated here to reduce time complexity
         infoField = np.zeros(shape=[tRange*2+1, tRange*2+1])
         left = self.posx - tRange
         top = self.posy - tRange
@@ -175,7 +132,7 @@ class UAV:
 
                 #problem: sometimes it keeps going back to the same cell because height known vs not known weights are
                 # not comparing well (height known keeps being more attractive especially near the end)
-#self.fuel < getDist(*center, gridXpos, gridYpos)+getDist(self.posx, self.posy, gridXpos, gridYpos) or
+
         #homeField = np.zeros(shape=[tRange*2+1, tRange*2+1])
         # left = self.posx - tRange
         # top = self.posy - tRange
@@ -226,53 +183,6 @@ class UAV:
 
         # ## SORT BASED ON TREE SCORES
         # return maskList
-    
-    def scoreTree(self, tree):
-        # distance to center, current fuel, distance to drone, cluster size
-
-        # distance to center: https://www.desmos.com/calculator/jgnjgjkmyd
-        dc = getDist(tree.posx, tree.posy, *center)
-        dCenter = getDist(*center, self.posx, self.posy)
-        dcr = [dCenter - tRange, dCenter + tRange]
-        dcNorm = normalize(dc,dcr,True)
-        w1 = 30*(normalize(self.fuel, [0,startFuel], True)**3)
-        dcValue = w1*dcNorm
-
-        # distance to drone
-        dd = getDist(tree.posx, tree.posy, self.posx, self.posy)
-        ddr = [0, tRange]
-        ddNorm = normalize(dd,ddr,True)
-        w2 = 10
-        ddValue = w2*ddNorm
-
-        # cluster size
-        cs = clusters[tree.cluster]["size"]
-        csr = [0,treeProb*500]
-        csNorm = normalize(cs,csr,False)
-        w3 = 5
-        csValue = w3*csNorm
-
-        ## TO BE DONE!!!
-        print(dcValue, ddValue, csValue)
-        return dcValue + ddValue + csValue
-
-        # dc weighted with fuel
-        # dd weighted with number (should be pretty high)
-        # cluster size weighted with number (kinda high)
-
-    async def moveToCenter(self):
-        distance = getDist(*center,self.posx,self.posy)
-        deltaX = center[0] - self.posx
-        deltaY = center[1] - self.posy
-
-        x = self.posx + deltaX*(1/distance)
-        y = self.posy + deltaY*(1/distance)
-
-        if deltaX < 1 and deltaY < 1:
-            x = center[0]
-            y = center[1]
-
-        await self.goTo(x,y)
 
     async def goTo(self, x, y):
         self.target = [x,y]
@@ -296,7 +206,7 @@ class UAV:
                 self.posy = y-(y-self.posy)*sideRatio
 
             self.update()
-            c.create_line(*posWithCW(oldPos), *posWithCW([self.posx, self.posy]), fill="black", width=2)
+            c.create_line(*posWithCW(oldPos), *posWithCW([self.posx, self.posy]), fill="white", width=2)
 
     def sendInfo(self):
         return {"target":self.target, "fuel":self.fuel, "maskList":self.getMaskList(10)}
