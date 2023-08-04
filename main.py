@@ -23,13 +23,12 @@ class App(object):
     def mainloop(self):
         self.gridInit()
 
-        uavs = []
         # angle = 0
         # while angle < 2*math.pi:
         #     uavs.append(UAV(center[0] + int(gridx/2)*math.cos(angle), center[1] + int(gridy/2)*math.sin(angle)))
         #     angle += 2*math.pi/uavCount
         for i in range(uavCount):
-            uavs.append(UAV(*center))
+            uavs.append(UAV(*center, i))
 
         loop = asyncio.new_event_loop()
         t = Thread(target=uavLoop, args=(loop,uavs))

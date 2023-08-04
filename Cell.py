@@ -12,11 +12,12 @@ class Cell:
         self.posy = posy
         self.isTree = isTree
         self.isCR = isCR
+        self.targeted = -1
 
         if isTree:
             self.height = random.randint(heightRange[0], heightRange[1])
             self.certainty = 0
-            self.heightKnown = False
+            #self.heightKnown = False
 
 
         color = bgColor
@@ -30,8 +31,7 @@ class Cell:
         c.tag_lower(self.r)
 
     #CHANGE PLS
-    def visit(self):
-        certainty = random.uniform(certaintyRange[0], certaintyRange[1])
+    def visit(self, certainty):
 
         graphHeight = self.height - heightRange[0]
         for density in range(self.density - densityInsertRadius, self.density + densityInsertRadius + 1):
@@ -47,13 +47,13 @@ class Cell:
                 current = threshold[height][density]
                 threshold[height][density] = current + (1-current)*value
 
-        for density in range(self.density - densityInsertRadius, self.density + densityInsertRadius + 1):
-            column = sum(threshold[:, density])
-            value = normalize(column, [0, heightRange[1]-heightRange[0]+1])
-            #https://www.desmos.com/calculator/cnh6ilimot
-            densityThreshold[density] = -(1/2*math.cos(value*math.pi)+1/2)**2 + 1
+        # for density in range(self.density - densityInsertRadius, self.density + densityInsertRadius + 1):
+        #     column = sum(threshold[:, density])
+        #     value = normalize(column, [0, heightRange[1]-heightRange[0]+1])
+        #     #https://www.desmos.com/calculator/cnh6ilimot
+        #     densityThreshold[density] = -(1/2*math.cos(value*math.pi)+1/2)**2 + 1
 
-        self.heightKnown = True
+        #self.heightKnown = True
 
         #plt.imshow(threshold, cmap='hot', interpolation='nearest')
         #plt.show()
