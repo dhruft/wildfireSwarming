@@ -1,12 +1,10 @@
+
 from vars import *
 
-def uavLoop(loop, uavs):
-    asyncio.set_event_loop(loop)
+rRange = 4
 
-    for uav in uavs:
-        loop.create_task(uav.mainLoop())
-
-    loop.run_forever()
+async def task_function(uav):
+    await uav.mainLoop()
 
 def centerToCircle(x,y,radius):
     return (x*cw-cw/2-cw*radius, y*cw-cw/2-cw*radius,
@@ -19,8 +17,8 @@ def chooseTarget():
     return [x,y]
 
 def previewField(field, x, y):
-    top = y-tRange
-    left = x-tRange
+    top = y-rRange
+    left = x-rRange
 
     cmap = cm.Blues
     norm = matplotlib.colors.Normalize(vmin=0, vmax=1)
@@ -39,24 +37,10 @@ def previewField(field, x, y):
             grid[gridYpos-1][gridXpos-1].setColor(color)
 
 def setTarget(target, id):
-    targetRadius = 2
-    for y in range(target[1]-targetRadius, target[1]+targetRadius+1):
-        for x in range(target[0]-targetRadius, target[0]+targetRadius+1):
-            if y < 1 or y > gridy or x < 1 or x > gridx:
-                continue
-            cell = grid[y-1][x-1] 
-            cell.targeted = id
-            cell.setColor("black")
+    grid[target[1]-1][target[0]-1].targeted = id
 
 def removeTarget(target, id):
-    targetRadius = 2
-    for y in range(target[1]-targetRadius, target[1]+targetRadius+1):
-        for x in range(target[0]-targetRadius, target[0]+targetRadius+1):
-            if y < 1 or y > gridy or x < 1 or x > gridx:
-                continue
-            cell = grid[y-1][x-1]
-            if cell.targeted == id:
-                cell.targeted = -1
+    grid[target[1]-1][target[0]-1].targeted = -1
 
 class UAV:
     
@@ -66,43 +50,58 @@ class UAV:
         self.posx = posx
         self.posy = posy
         self.id = id
-
-        self.circle = c.create_oval(centerToCircle(posx,posy,uavRadius),
-                       fill="blue" )
         
         self.fuel = startFuel
         self.certainty = random.uniform(certaintyRange[0], certaintyRange[1])
         self.reroute = False
+
+        cmap = cm.Greens
+        norm = matplotlib.colors.Normalize(vmin=certaintyRange[0], vmax=certaintyRange[1])
+
+        rgb = cmap(norm(self.certainty))[:3]  # will return rgba, we take only first 3 so we get rgb
+        color = matplotlib.colors.rgb2hex(rgb)
+
+        self.circle = c.create_oval(centerToCircle(posx,posy,uavRadius),
+                       fill=color )
     
     def update(self):
         c.coords(self.circle, centerToCircle(self.posx,self.posy,uavRadius))
     
     async def mainLoop(self):
-        target = chooseTarget()
 
+        global deployments
+
+        if deployments <= 0:
+            return
+
+        deployments -= 1
+        self.fuel = startFuel
+
+        target = chooseTarget()
         await self.goTo(*target)
 
-        if self.cell.isTree:
-            self.fuel -= collectionFuelLoss
-            self.cell.visit(self.certainty)
+        # if self.cell.isTree:
+        #     self.fuel -= collectionFuelLoss
+        #     self.cell.visit(self.certainty)
 
-        await asyncio.sleep(collectionTime)
+        # await asyncio.sleep(collectionTime)
 
-        # field = self.fieldOverlay()
-        # previewField(field, self.posx, self.posy)
+        field = self.fieldOverlay([self.posx, self.posy])
+        #previewField(field, self.posx, self.posy)
 
         while self.fuel > 0:
             fieldCenter = [round(self.posx), round(self.posy)]
             field = self.fieldOverlay(fieldCenter)
+            #previewField(field, self.posx, self.posy)
 
             if np.amax(field) <= 0:
                 break
             
             maskList = []
-            left = fieldCenter[0] - tRange
-            top = fieldCenter[1] - tRange
-            for y in range(2*tRange+1):
-                for x in range(2*tRange+1):
+            left = fieldCenter[0] - rRange
+            top = fieldCenter[1] - rRange
+            for y in range(2*rRange+1):
+                for x in range(2*rRange+1):
                     fieldValue = field[y][x]
                     if fieldValue <= 0:
                         continue
@@ -112,15 +111,9 @@ class UAV:
 
             target = 0
             for value, cell in maskList:
-                print(value)
                 if cell.targeted == -1:
                     target = cell
                     break
-                conflictUAV = uavs[cell.targeted]
-                if self.certainty <= conflictUAV.certainty:
-                    continue
-                target = cell
-                conflictUAV.reroute = True
 
             if target == 0:
                 break
@@ -131,28 +124,35 @@ class UAV:
             setTarget(targetPos, self.id)
 
             complete = await self.goTo(*targetPos)
-            removeTarget(targetPos, self.id)
-
+            
             if complete:
                 self.fuel -= collectionFuelLoss
-                await asyncio.sleep(collectionTime)
 
                 self.cell.visit(self.certainty)
+                await asyncio.sleep(collectionTime)
+
+            removeTarget(targetPos, self.id)
         
         await self.goTo(*center)
+        await asyncio.sleep(redeploymentTime)
 
-        updatePlot()
+        # updatePlot()
+
+        if deployments > 0:
+            await self.mainLoop()
+
+        return
 
         #DURING LOOP, if height is already known, update thresholds immediatley otherwise wait until you get there
 
     def fieldOverlay(self, fieldCenter):
         #previewField(proximityField, self.posx, self.posy)
 
-        infoField = np.zeros(shape=[tRange*2+1, tRange*2+1])
-        left = fieldCenter[0] - tRange
-        top = fieldCenter[1] - tRange
-        for y in range(2*tRange+1):
-            for x in range(2*tRange+1):
+        infoField = np.zeros(shape=[rRange*2+1, rRange*2+1])
+        left = fieldCenter[0] - rRange
+        top = fieldCenter[1] - rRange
+        for y in range(2*rRange+1):
+            for x in range(2*rRange+1):
                 gridYpos = top+y
                 gridXpos = left+x
 
@@ -165,21 +165,19 @@ class UAV:
                     infoField[y][x] = -1
                     continue
 
-                #if cell.heightKnown:
-                value = 1 - threshold[cell.height-heightRange[0]][cell.density]
+                # if cell.heightKnown:
+                #     value = 1 - threshold[cell.height-heighrRange[0]][cell.density]
                 # else:
                 #     value = 1 - densityThreshold[cell.density]
+                value = random.random()
 
                 infoField[y][x] = value
 
                 #problem: sometimes it keeps going back to the same cell because height known vs not known weights are
                 # not comparing well (height known keeps being more attractive especially near the end)
 
-        infoWeight = 0.65
-        proximityWeight = 0.35
-
-        return infoWeight*infoField + proximityWeight*proximityField
-
+        return infoField
+    
     async def goTo(self, x, y):
         self.target = [x,y]
         self.fuel -= getDist(x,y,self.posx,self.posy)
@@ -189,7 +187,7 @@ class UAV:
             await asyncio.sleep(ti)
             if self.reroute:
                 self.reroute = False
-                print("rerouted")
+                #print("rerouted")
                 return False
             
             dist = getDist(x,y,self.posx,self.posy)
@@ -204,9 +202,9 @@ class UAV:
             else:
                 self.posx = x-(x-self.posx)*sideRatio
                 self.posy = y-(y-self.posy)*sideRatio
-
+            
+            if showPath: c.create_line(*posWithCW(oldPos), *posWithCW([self.posx, self.posy]), fill="black", width=2)
             self.update()
-            c.create_line(*posWithCW(oldPos), *posWithCW([self.posx, self.posy]), fill="white", width=2)
         return True
 
     def sendInfo(self):

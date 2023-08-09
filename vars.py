@@ -12,41 +12,47 @@ import matplotlib.pyplot as plt
 import seaborn as sn
 
 cw = 10
-gridx = 15
-gridy = 15
+gridx = 101
+gridy = 101
 grid = np.empty(shape=(gridy, gridx), dtype=object)
 ti = 0.01
 center = [math.ceil(gridx/2), math.ceil(gridy/2)]
+showPath = True
 
-uavCount = 3
+uavCount = 25
+deployments = 300
 uavs = []
-vel = 10
-startFuel = 300
+vel = 200
+startFuel = 150
 tRange = 15
-certaintyRange = [0.6, 0.9]
+certaintyRange = [0.4, 0.6]
 collectionFuelLoss = 10
-collectionTime = 0.5
+collectionTime = 0.1
+redeploymentTime = 0.2
+minInfo = 0.01
 
-homeRadius = 5
+homeRadius = 3
 crRadius = 1
 uavRadius = 0.5
+targetRadius = 5
 
 #forest gen
 treeProb = 0.5
-heightRange = [15, 35] #in meters, inclusive
+heightRange = [5, 95] #in meters, inclusive
 
 # variable inits
 trees = []
 canvas = [0]
-clusters = {}
 
 #threshold init
 # x axis is density from 0 to 16
 # y axis (increasing from top to bototm) is height
-threshold = np.zeros(shape=(heightRange[1]-heightRange[0]+1, 33))
+maxDensity = 32
+threshold = np.zeros(shape=(heightRange[1]-heightRange[0]+1, maxDensity + 1))
 densityInsertRadius = 1
 heightInsertRadius = 1
-densityThreshold = np.zeros(shape=(33))
+densityThreshold = np.zeros(shape=(maxDensity + 1))
+heightThreshold = np.zeros(shape=(heightRange[1]-heightRange[0] + 1))
 
 # plt.figure()
 # f, axarr = plt.subplots(2,1)
@@ -59,12 +65,14 @@ densityThreshold = np.zeros(shape=(33))
 plot = plt.imshow(threshold, cmap='hot', interpolation='nearest')
 plt.show()
 
-def updatePlot():
+def displayPlot():
     plt.imshow(threshold, cmap='hot', interpolation='nearest')
-    #axarr[0].imshow(threshold, cmap='hot', interpolation='nearest')
-    #axarr[1].imshow(densityThreshold, cmap='hot', interpolation='nearest')
-    #axarr[1] = sn.heatmap([densityThreshold])
+    # #axarr[0].imshow(threshold, cmap='hot', interpolation='nearest')
+    # #axarr[1].imshow(densityThreshold, cmap='hot', interpolation='nearest')
+    # #axarr[1] = sn.heatmap([densityThreshold])
     plt.show()
+    #plt.plot(densityThreshold)
+    #plt.show()
 
 # if flip is True, then lower values = higher priority, meaning
 # the normalize function should return larger numbers for lower values

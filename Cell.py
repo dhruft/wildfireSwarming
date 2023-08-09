@@ -15,7 +15,17 @@ class Cell:
         self.targeted = -1
 
         if isTree:
-            self.height = random.randint(heightRange[0], heightRange[1])
+            mean = (heightRange[0]+heightRange[1])/2
+            std_deviation = 12
+
+            # Generate a random number from the normal distribution
+            random_number = np.random.normal(mean, std_deviation)
+
+            # Ensure the generated number is within the desired range
+            random_number = max(min(random_number, heightRange[1]), heightRange[0])
+
+            #self.height = random.randint(heightRange[0], heightRange[1])
+            self.height = int(random_number)
             self.certainty = 0
             #self.heightKnown = False
 
@@ -37,7 +47,7 @@ class Cell:
         for density in range(self.density - densityInsertRadius, self.density + densityInsertRadius + 1):
 
             for height in range(graphHeight - heightInsertRadius, graphHeight + heightInsertRadius+1):
-                if height < 0 or height > heightRange[1] - heightRange[0] or density < 0 or density > 32:
+                if height < 0 or height > heightRange[1] - heightRange[0] or density < 0 or density > maxDensity:
                     continue
                 
                 #update threshold
@@ -47,11 +57,23 @@ class Cell:
                 current = threshold[height][density]
                 threshold[height][density] = current + (1-current)*value
 
-        # for density in range(self.density - densityInsertRadius, self.density + densityInsertRadius + 1):
-        #     column = sum(threshold[:, density])
-        #     value = normalize(column, [0, heightRange[1]-heightRange[0]+1])
-        #     #https://www.desmos.com/calculator/cnh6ilimot
-        #     densityThreshold[density] = -(1/2*math.cos(value*math.pi)+1/2)**2 + 1
+        for density in range(self.density - densityInsertRadius, self.density + densityInsertRadius + 1):
+            if density < 0 or density > maxDensity:
+                    continue
+
+            column = sum(threshold[:, density])
+            value = normalize(column, [0, heightRange[1]-heightRange[0]+1])
+            #https://www.desmos.com/calculator/cnh6ilimot
+            densityThreshold[density] = -(1/2*math.cos(value*math.pi)+1/2)**2 + 1
+
+        for height in range(graphHeight - heightInsertRadius, graphHeight + heightInsertRadius+1):
+            if height < 0 or height > heightRange[1] - heightRange[0]:
+                    continue
+
+            row = sum(threshold[height])
+            value = normalize(row, [0, maxDensity+1])
+            #https://www.desmos.com/calculator/cnh6ilimot
+            heightThreshold[height] = -(1/2*math.cos(value*math.pi)+1/2)**2 + 1
 
         #self.heightKnown = True
 
@@ -64,7 +86,7 @@ class Cell:
     def setDensity(self, density):
         self.density = density
         cmap = cm.Reds
-        norm = matplotlib.colors.Normalize(vmin=0, vmax=32)
+        norm = matplotlib.colors.Normalize(vmin=0, vmax=maxDensity)
 
         rgb = cmap(norm(abs(density)))[:3]  # will return rgba, we take only first 3 so we get rgb
         color = matplotlib.colors.rgb2hex(rgb)
