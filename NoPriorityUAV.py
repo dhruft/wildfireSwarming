@@ -12,6 +12,13 @@ def chooseTarget():
     x = random.randint(*random.choice([ [1,math.floor(center[0]-homeRadius)],[math.ceil(center[0]+homeRadius), gridx] ]))
     y = random.randint(*random.choice([ [1,math.floor(center[1]-homeRadius)],[math.ceil(center[1]+homeRadius), gridy] ]))
 
+    # angleRange = [-math.pi/4, math.pi/4]
+    # angle = random.uniform(*angleRange)
+
+    # xDist = random.randint(homeRadius, gridx//2)
+
+    # x = xDist + center[0]
+    # y = int(math.tan(angle)*xDist+center[1])
     return [x,y]
 
 def previewField(field, x, y):
@@ -168,10 +175,11 @@ class UAV:
                 # else:
                 #     value = 1 - densityThreshold[cell.density]
                 gridVal = 1 - threshold[cell.height-heightRange[0]][cell.density]
-                densityVal = 1 - densityThreshold[cell.density]
-                heightVal = 1 - heightThreshold[cell.height  - heightRange[0]]
+                # densityVal = 1 - densityThreshold[cell.density]
+                # heightVal = 1 - heightThreshold[cell.height  - heightRange[0]]
 
-                value = gridVal*0.6 + densityVal*0.15 + heightVal*0.15
+                # value = gridVal*0.6 + densityVal*0.15 + heightVal*0.15
+                value = gridVal
                 
                 infoField[y][x] = value
 

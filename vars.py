@@ -19,13 +19,13 @@ ti = 0.01
 center = [math.ceil(gridx/2), math.ceil(gridy/2)]
 showPath = True
 
-uavCount = 25
-deployments = 300
+uavCount = 3
+deployments = 25
 uavs = []
-vel = 200
-startFuel = 150
+vel = 10
+startFuel = 250
 tRange = 15
-certaintyRange = [0.4, 0.6]
+certaintyRange = [0.4, 0.9]
 collectionFuelLoss = 10
 collectionTime = 0.1
 redeploymentTime = 0.2
@@ -37,8 +37,8 @@ uavRadius = 0.5
 targetRadius = 5
 
 #forest gen
-treeProb = 0.5
-heightRange = [5, 95] #in meters, inclusive
+treeProb = 0.3
+heightRange = [5, 175] #in meters, inclusive
 
 # variable inits
 trees = []
@@ -49,8 +49,8 @@ canvas = [0]
 # y axis (increasing from top to bototm) is height
 maxDensity = 32
 threshold = np.zeros(shape=(heightRange[1]-heightRange[0]+1, maxDensity + 1))
-densityInsertRadius = 1
-heightInsertRadius = 1
+densityInsertRadius = 3
+heightInsertRadius = 5
 densityThreshold = np.zeros(shape=(maxDensity + 1))
 heightThreshold = np.zeros(shape=(heightRange[1]-heightRange[0] + 1))
 

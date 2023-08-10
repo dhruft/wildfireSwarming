@@ -16,7 +16,7 @@ class Cell:
 
         if isTree:
             mean = (heightRange[0]+heightRange[1])/2
-            std_deviation = 12
+            std_deviation = (heightRange[0]+heightRange[1])/7
 
             # Generate a random number from the normal distribution
             random_number = np.random.normal(mean, std_deviation)
@@ -52,8 +52,13 @@ class Cell:
                 
                 #update threshold
                 maxDist = getDist(0, 0, densityInsertRadius, heightInsertRadius)
-                value = normalize(getDist(self.density, graphHeight, density, height), [0, maxDist], True)
-                value = certainty*(-(1/2*math.cos(value*math.pi)+1/2)**2 + 1)
+                dist = getDist(self.density, graphHeight, density, height)
+                value = normalize(dist, [0, maxDist], True)*certainty
+
+                if dist != 0:
+                     value /= 3
+                #print(value)
+                #value = certainty*(-(1/2*math.cos(value*math.pi)+1/2)**2 + 1)
                 current = threshold[height][density]
                 threshold[height][density] = current + (1-current)*value
 

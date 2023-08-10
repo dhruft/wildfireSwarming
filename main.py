@@ -52,29 +52,66 @@ class App(object):
         self.displayMetrics()
     
     def displayMetrics(self):
-        infoMagnitudeScore = np.sum(threshold)/(len(threshold[0])*len(threshold))
-        print(infoMagnitudeScore)
-        #finalThresholdValue = 0
-        #for value in 
+        # infoMagnitudeScore = np.sum(threshold)/(len(threshold[0])*len(threshold))
+        # print(infoMagnitudeScore)
+        # #finalThresholdValue = 0
+        # #for value in 
 
-        # Normalize the data points to a probability distribution
-        normalized_data = threshold / np.sum(threshold)
+        # # Normalize the data points to a probability distribution
+        # normalized_data = threshold / np.sum(threshold)
 
-        # Create a uniform distribution
-        uniform_distribution = np.ones_like(normalized_data) / np.prod(threshold.shape)
+        # # Create a uniform distribution
+        # # uniform_distribution = np.ones_like(normalized_data) / np.prod(threshold.shape)
 
-        # Calculate the average of the Jensen-Shannon Divergence between the data distribution and the uniform distribution
-        jsd_score = 0.5 * (entropy(normalized_data.flatten(), 0.5 * (normalized_data.flatten() + uniform_distribution.flatten())) +
-                        entropy(uniform_distribution.flatten(), 0.5 * (normalized_data.flatten() + uniform_distribution.flatten())))
+        # # # Calculate the average of the Jensen-Shannon Divergence between the data distribution and the uniform distribution
+        # # jsd_score = 0.5 * (entropy(normalized_data.flatten(), 0.5 * (normalized_data.flatten() + uniform_distribution.flatten())) +
+        # #                 entropy(uniform_distribution.flatten(), 0.5 * (normalized_data.flatten() + uniform_distribution.flatten())))
 
-        print("Jensen-Shannon Divergence-based Evenness Score:", jsd_score)
+        # # print("Jensen-Shannon Divergence-based Evenness Score:", jsd_score)
 
-        weight_info = 0.75
-        weight_jsd = 0.25
+        # # weight_info = 0.75
+        # # weight_jsd = 0.25
 
-        combined_score = (weight_info * infoMagnitudeScore) + (weight_jsd * (1 - jsd_score))
+        # # combined_score = (weight_info * infoMagnitudeScore) + (weight_jsd * (1 - jsd_score))
+        # # Create a uniform distribution
+        # uniform_distribution = np.ones_like(normalized_data) / np.prod(threshold.shape)
 
-        print(f"{deployments}/{uavCount}: {combined_score}")
+        # # Calculate the KL Divergence (relative entropy) between data distribution and uniform distribution
+        # kl_divergence = entropy(normalized_data.flatten(), uniform_distribution.flatten())
+
+        # # Calculate a score that combines KL Divergence and values in each position
+        # evenness_score = 1 / (1 + kl_divergence)  # Invert KL Divergence to align with a higher score indicating more evenness
+        # values_score = np.mean(threshold)  # Mean value of the data
+
+        # # Define weights for evenness and values scores
+        # evenness_weight = 0.6
+        # values_weight = 0.4
+
+        # # Calculate the combined score
+        # combined_kl_score = (evenness_weight * evenness_score) + (values_weight * values_score)
+        # print("Combined Score:", combined_kl_score)
+
+        # weight_info = 0.25
+        # weight_kl = 0.75
+        # combined_score = (weight_info * infoMagnitudeScore) + (weight_kl * combined_kl_score)
+
+        # print(f"{deployments}/{uavCount}: {combined_score}")
+
+        collectedTrees = []
+        for row in threshold:
+            for tree in row:
+                if tree >= certaintyRange[0]:
+                    collectedTrees.append(tree)
+        collectedTrees.sort()
+        median = collectedTrees[len(collectedTrees)//2]
+
+        totalDeviation = 0
+        for row in threshold:
+            for tree in row:
+                totalDeviation += (tree-median)**2
+        totalDeviation = math.sqrt(totalDeviation)
+        print(totalDeviation)
+
         displayPlot()
 
     def gridInit(self):

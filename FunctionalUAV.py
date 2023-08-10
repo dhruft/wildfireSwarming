@@ -2,12 +2,21 @@ from vars import *
 
 async def task_function(uav):
     await uav.mainLoop()
+    await uav.goTo(*center)
 
 def centerToCircle(x,y,radius):
     return (x*cw-cw/2-cw*radius, y*cw-cw/2-cw*radius,
                       x*cw-cw/2+cw*radius, y*cw-cw/2+cw*radius)
 
 def chooseTarget():
+    # angleRange = [-math.pi/6, math.pi/6]
+    # angle = random.uniform(*angleRange)
+
+    # xDist = random.randint(homeRadius, gridx//2)
+
+    # x = xDist + center[0]
+    # y = int(math.tan(angle)*xDist+center[1])
+
     x = random.randint(*random.choice([ [1,math.floor(center[0]-homeRadius)],[math.ceil(center[0]+homeRadius), gridx] ]))
     y = random.randint(*random.choice([ [1,math.floor(center[1]-homeRadius)],[math.ceil(center[1]+homeRadius), gridy] ]))
 
@@ -30,8 +39,10 @@ def previewField(field, x, y):
 
             rgb = cmap(norm(abs(max(0,field[row][pos]))))[:3]  # will return rgba, we take only first 3 so we get rgb
             color = matplotlib.colors.rgb2hex(rgb)
-
-            grid[gridYpos-1][gridXpos-1].setColor(color)
+            try:
+                grid[gridYpos-1][gridXpos-1].setColor(color)
+            except:
+                continue
 
 def setTarget(target, id):
     for y in range(target[1]-targetRadius, target[1]+targetRadius+1):
@@ -102,7 +113,7 @@ class UAV:
         while self.fuel > 0:
             fieldCenter = [round(self.posx), round(self.posy)]
             field = self.fieldOverlay(fieldCenter)
-            #previewField(field, self.posx, self.posy)
+            previewField(field, self.posx, self.posy)
 
             if np.amax(field) <= 0:
                 break
@@ -148,14 +159,14 @@ class UAV:
                 await asyncio.sleep(collectionTime)
 
             removeTarget(targetPos, self.id)
-        
-        await self.goTo(*center)
-        await asyncio.sleep(redeploymentTime)
 
         # updatePlot()
 
         if deployments > 0:
             await self.mainLoop()
+
+        await self.goTo(*center)
+        await asyncio.sleep(redeploymentTime)
 
         return
 
@@ -189,10 +200,12 @@ class UAV:
                 densityVal = 1 - densityThreshold[cell.density]
                 heightVal = 1 - heightThreshold[cell.height  - heightRange[0]]
 
-                if gridVal < 1:
-                    value = gridVal*0.6 + densityVal*0.15 + heightVal*0.15
-                else:
-                    value = densityVal*0.5 + heightVal*0.5
+                value = gridVal
+
+                # if gridVal < 1:
+                #     value = gridVal*0.6 + densityVal*0.15 + heightVal*0.15
+                # else:
+                #     value = densityVal*0.5 + heightVal*0.5
 
                 infoField[y][x] = value
 
