@@ -21,7 +21,7 @@ def previewField(field, x, y):
     left = x-tRange
 
     cmap = cm.Blues
-    norm = matplotlib.colors.Normalize(vmin=0, vmax=1)
+    norm = matplotlib.colors.Normalize(vmin=np.min(field), vmax=np.max(field))
 
     for row in range(len(field)):
         for pos in range(len(field[0])):

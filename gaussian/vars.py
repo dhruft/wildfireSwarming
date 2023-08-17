@@ -35,7 +35,7 @@ uavCount = 3
 deployments = 3
 uavs = []
 vel = 50
-startFuel = 600
+startFuel = 500
 tRange = 10
 #certaintyRange = [0.4, 0.9]
 collectionFuelLoss = 40
@@ -109,11 +109,11 @@ for itery in range(2*tRange+1):
         proximityField[itery][iterx] = normalize(value, [0, maxValue], True)
 
 # Define the Matérn kernel with the desired smoothness parameter (nu)
-nu = 1.5 # Smoothness parameter, adjust as needed
-length_scale = 1  # Length scale parameter
-noise_level = 0.5
-kernel = Matern(length_scale=length_scale, nu=nu)
-
+nu = 1 # Smoothness parameter, adjust as needed
+length_scale = 2 # Length scale parameter
+noise_level = 1.5
+#kernel = RBF(length_scale=length_scale)
+kernel = 3.0 * Matern(length_scale=length_scale, nu=nu)
 gpr = GaussianProcessRegressor(kernel=kernel, alpha=noise_level)
 
 selected_X = []

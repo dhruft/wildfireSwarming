@@ -6,10 +6,11 @@ from sklearn.gaussian_process.kernels import RBF, Matern
 import pandas as pd
 
 # Define the Matérn kernel with the desired smoothness parameter (nu)
-nu = 2 # Smoothness parameter, adjust as needed
+nu = 1 # Smoothness parameter, adjust as needed
 length_scale = 2 # Length scale parameter
-noise_level = 0.5
-kernel = Matern(length_scale=length_scale, nu=nu)
+noise_level = 1.5
+#kernel = RBF(length_scale=length_scale)
+kernel = 3.0 * Matern(length_scale=length_scale, nu=nu)
 
 # True underlying function
 # def true_function(x):
@@ -109,7 +110,7 @@ X_pool = np.array(ht_values)
 y_pool = np.array(dbh_values)
 
 # Perform active learning
-num_iterations = 100
+num_iterations = 40
 selected_X, selected_y = active_learning(X_pool, y_pool, num_iterations, kernel)
 
 # Create a test set to evaluate the model's predictions
@@ -124,7 +125,7 @@ final_gpr.fit(np.array(selected_X).reshape(-1, 1), np.array(selected_y))
 
 # Get the model's predictions and uncertainty for the test set
 y_pred, y_std = final_gpr.predict(X_test.reshape(-1, 1), return_std=True)
-y_std = 5*y_std
+y_std = y_std
 print(y_std)
 
 # Plot the results

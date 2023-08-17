@@ -85,15 +85,15 @@ class App(object):
 
         # Plot the GP predictions and uncertainty
         z_pred = z_pred.reshape(x_grid.shape)
-        z_std = z_std.reshape(y_grid.shape)
+        z_std = z_std.reshape(y_grid.shape)**2
         ax.plot_surface(x_grid, y_grid, z_pred, cmap='coolwarm', alpha=0.5, label='GP Predictions')
         ax.plot_surface(x_grid, y_grid, z_pred + z_std, color='b', alpha=0.3)
         ax.plot_surface(x_grid, y_grid, z_pred - z_std, color='b', alpha=0.3)
 
         # Customize labels and legend
-        ax.set_xlabel('X')
-        ax.set_ylabel('Y')
-        ax.set_zlabel('z')
+        ax.set_xlabel('Height')
+        ax.set_ylabel('Density')
+        ax.set_zlabel('DBH')
         #ax.legend()
 
         A = np.array([tree.DBH for tree in trees])
