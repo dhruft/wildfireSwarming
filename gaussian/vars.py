@@ -31,8 +31,8 @@ startCenter = [math.ceil(gridx/2)+2, math.ceil(gridy/2)+2]
 center = [math.ceil(gridx/2), math.ceil(gridy/2)]
 showPath = True
 
-uavCount = 3
-deployments = 3
+uavCount = 5
+deployments = 5
 uavs = []
 vel = 50
 startFuel = 500

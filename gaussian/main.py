@@ -12,7 +12,7 @@ from vars import *
 # add an array of UAVs and fix variables and scopes and stuff
 
 modules = [FunctionalUAV, ThresholdUAV, RandomUAV]
-module = 0
+module = 2
 
 class App(object):
 
@@ -66,47 +66,54 @@ class App(object):
         input = np.column_stack((np.array(selected_X), np.array(selected_Y)))
         gpr.fit(input, np.array(selected_z))
 
-        # Create a test set to evaluate the model's predictions
-        x = np.linspace(0, maxHeight, 1000)
-        y = np.linspace(0,maxDensity,1000)
-        x_grid, y_grid = np.meshgrid(x, y)
-        X_test = np.column_stack((x_grid.ravel(), y_grid.ravel()))
+        # # Create a test set to evaluate the model's predictions
+        # x = np.linspace(0, maxHeight, 1000)
+        # y = np.linspace(0,maxDensity,1000)
+        # x_grid, y_grid = np.meshgrid(x, y)
+        # X_test = np.column_stack((x_grid.ravel(), y_grid.ravel()))
 
-        z_pred, z_std = gpr.predict(X_test, return_std=True)
+        # z_pred, z_std = gpr.predict(X_test, return_std=True)
 
-        # Create a 3D scatter plot for actual data
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        #ax.scatter(x, y, z_actual, c='blue', marker='o', label='Actual Data')
+        # # Create a 3D scatter plot for actual data
+        # fig = plt.figure()
+        # ax = fig.add_subplot(111, projection='3d')
+        # #ax.scatter(x, y, z_actual, c='blue', marker='o', label='Actual Data')
 
-        # Scatter plot of selected points
-        ax.scatter(selected_X, selected_Y, selected_z, c='r', marker='x', label='Selected Data')
+        # # Scatter plot of selected points
+        # ax.scatter(selected_X, selected_Y, selected_z, c='r', marker='x', label='Selected Data')
 
 
-        # Plot the GP predictions and uncertainty
-        z_pred = z_pred.reshape(x_grid.shape)
-        z_std = z_std.reshape(y_grid.shape)**2
-        ax.plot_surface(x_grid, y_grid, z_pred, cmap='coolwarm', alpha=0.5, label='GP Predictions')
-        ax.plot_surface(x_grid, y_grid, z_pred + z_std, color='b', alpha=0.3)
-        ax.plot_surface(x_grid, y_grid, z_pred - z_std, color='b', alpha=0.3)
+        # # Plot the GP predictions and uncertainty
+        # z_pred = z_pred.reshape(x_grid.shape)
+        # z_std = z_std.reshape(y_grid.shape)*3
+        # ax.plot_surface(x_grid, y_grid, z_pred, cmap='coolwarm', alpha=0.5, label='GP Predictions')
+        # ax.plot_surface(x_grid, y_grid, z_pred + z_std, color='b', alpha=0.3)
+        # ax.plot_surface(x_grid, y_grid, z_pred - z_std, color='b', alpha=0.3)
 
-        # Customize labels and legend
-        ax.set_xlabel('Height')
-        ax.set_ylabel('Density')
-        ax.set_zlabel('DBH')
-        #ax.legend()
+        # # Customize labels and legend
+        # ax.set_xlabel('Height')
+        # ax.set_ylabel('Density')
+        # ax.set_zlabel('DBH')
+        # #ax.legend()
 
         A = np.array([tree.DBH for tree in trees])
-        B = np.array([gpr.predict([[tree.height, tree.density]], return_std=True)[0][0] for tree in trees])
+        #B = np.array([gpr.predict([[tree.height, tree.density]], return_std=True)[0][0] for tree in trees])
+
+        B = np.array(gpr.predict([[tree.height, tree.density] for tree in trees]))
 
         mse = ((A - B)**2).mean()
-        print(mse)
+        #print(mse)
 
-        plt.title('Active Learning with Gaussian Process Regression in 3D')
-        plt.show()
+        # plt.title('Active Learning with Gaussian Process Regression in 3D')
+        # plt.show()
 
-        # metric = sum(z_std)
-        # print(metric)
+        f = open("results.txt", "a")
+        f.write("\n"+str(mse))
+        f.close()
+
+        global root
+        root.quit()
+
 
         #displayPlot()
 
