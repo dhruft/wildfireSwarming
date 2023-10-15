@@ -12,7 +12,7 @@ from vars import *
 # add an array of UAVs and fix variables and scopes and stuff
 
 modules = [FunctionalUAV, ThresholdUAV, RandomUAV]
-module = 2
+module = 0
 
 class App(object):
 
@@ -47,24 +47,33 @@ class App(object):
         self.displayMetrics()
 
     def displayMetrics(self):
+        
+        #---------------------------------------------
+        ## GET DBH PREDICTION FROM FINAL GAUSSIAN
+
+        gpr.fit(input, np.array(selected_z))
+        X_test = np.array([],[])
 
         # Get the model's predictions and uncertainty for the test set
-        # y_pred, y_std = gpr.predict(X_test.reshape(-1, 1), return_std=True)
+        y_pred, y_std = gpr.predict(X_test.reshape(-1, 1), return_std=True)
 
-        # # Plot the results
-        # plt.figure(figsize=(10, 6))
-        # #plt.plot(X_pool, true_function(X_pool), label='True Function')
-        # plt.scatter(selected_X, selected_z, color='g', marker='x', label='Selected Data')
-        # plt.plot(X_test, y_pred, color='b', label='GP Predictions')
-        # plt.fill_between(X_test, y_pred - y_std, y_pred + y_std, alpha=0.3, color='b', label='Uncertainty')
-        # plt.xlabel('Height')
-        # plt.ylabel('DBH')
-        # plt.legend()
-        # plt.title('Active Learning with Gaussian Process Regression')
-        # plt.show()
+        # Plot the results
+        plt.figure(figsize=(10, 6))
+        #plt.plot(X_pool, true_function(X_pool), label='True Function')
+        plt.scatter(selected_X, selected_z, color='g', marker='x', label='Selected Data')
+        plt.plot(X_test, y_pred, color='b', label='GP Predictions')
+        plt.fill_between(X_test, y_pred - y_std, y_pred + y_std, alpha=0.3, color='b', label='Uncertainty')
+        plt.xlabel('Height')
+        plt.ylabel('DBH')
+        plt.legend()
+        plt.title('Active Learning with Gaussian Process Regression')
+        plt.show()
 
-        input = np.column_stack((np.array(selected_X), np.array(selected_Y)))
-        gpr.fit(input, np.array(selected_z))
+        #_-------------------------------------------------------
+        ## FOR 3D PLOT OF DBH PREDICTIONS, GAUSSIAN UNCERTAINTY, AND SELECTED POINTS
+
+        # input = np.column_stack((np.array(selected_X), np.array(selected_Y)))
+        # gpr.fit(input, np.array(selected_z))
 
         # # Create a test set to evaluate the model's predictions
         # x = np.linspace(0, maxHeight, 1000)
@@ -96,26 +105,28 @@ class App(object):
         # ax.set_zlabel('DBH')
         # #ax.legend()
 
-        A = np.array([tree.DBH for tree in trees])
-        #B = np.array([gpr.predict([[tree.height, tree.density]], return_std=True)[0][0] for tree in trees])
-
-        B = np.array(gpr.predict([[tree.height, tree.density] for tree in trees]))
-
-        mse = ((A - B)**2).mean()
-        #print(mse)
-
         # plt.title('Active Learning with Gaussian Process Regression in 3D')
         # plt.show()
 
-        f = open("results.txt", "a")
-        f.write("\n"+str(mse))
-        f.close()
+        #-------------------------------------------------------------
+        ## FOR SIMULATION (mse calculations, write to file, close program)
 
-        global root
-        root.quit()
+        #A = np.array([tree.DBH for tree in trees])
+        #B = np.array([gpr.predict([[tree.height, tree.density]], return_std=True)[0][0] for tree in trees])
 
+        #B = np.array(gpr.predict([[tree.height, tree.density] for tree in trees]))
 
-        #displayPlot()
+        #mse = ((A - B)**2).mean()
+        #print(mse)
+
+        # f = open("results.txt", "a")
+        # f.write("\n"+str(mse))
+        # f.close()
+
+        #global root
+        #root.quit()
+
+        #-------------------------------------------------------------
 
 root = tk.Tk()
 app = App(root)
