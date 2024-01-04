@@ -1,0 +1,6 @@
+ssgpr/setup.py
+ssgpr.egg-info/PKG-INFO
+ssgpr.egg-info/SOURCES.txt
+ssgpr.egg-info/dependency_links.txt
+ssgpr.egg-info/requires.txt
+ssgpr.egg-info/top_level.txt

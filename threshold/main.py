@@ -6,9 +6,6 @@ from scipy.stats import entropy
 
 from vars import *
 from DensityCalc import assignDensities
-# make global variables
-# move start loop and increment loop into Cell.py
-# add an array of UAVs and fix variables and scopes and stuff
 
 class App(object):
 

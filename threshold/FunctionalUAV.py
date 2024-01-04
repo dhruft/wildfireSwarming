@@ -113,7 +113,7 @@ class UAV:
         while self.fuel > 0:
             fieldCenter = [round(self.posx), round(self.posy)]
             field = self.fieldOverlay(fieldCenter)
-            previewField(field, self.posx, self.posy)
+            #previewField(field, self.posx, self.posy)
 
             if np.amax(field) <= 0:
                 break
@@ -162,11 +162,11 @@ class UAV:
 
         # updatePlot()
 
-        if deployments > 0:
-            await self.mainLoop()
-
         await self.goTo(*center)
         await asyncio.sleep(redeploymentTime)
+
+        if deployments > 0:
+            await self.mainLoop()
 
         return
 
