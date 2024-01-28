@@ -2,14 +2,15 @@
 
 from vars import *
 
-class MonteCarloTreeSearchNode():
-    def __init__(self, state):
+class MCTSNode():
+    def __init__(self, state, parent=None):
         self.state = state
         #self.parent_action = parent_action
         self.children = []
-        self._number_of_visits = 0
+        self.number_of_visits = 0
         self.cValue = 0
         self.sValue = 0
+        self.parent = parent
         # self._results = defaultdict(int)
         # self._results[1] = 0
         # self._results[-1] = 0
@@ -18,13 +19,9 @@ class MonteCarloTreeSearchNode():
         return
     
     def getUCB1(self):
-        return self.sValue + self.cValue/self.number_of_visits + 2*math.sqrt(math.log(self.parent.number_of_visits)/self._number_of_visits)
-    
-    def calculateSVALUE(self):
-
-
-
-        return
+        if self.number_of_visits == 0:
+            return 999999
+        return self.sValue + self.cValue/self.number_of_visits + 2*math.sqrt(math.log(self.parent.number_of_visits)/self.number_of_visits)
 
     # def untried_actions(self):
     #     self._untried_actions = self.state.get_legal_actions()

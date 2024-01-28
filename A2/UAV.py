@@ -1,6 +1,6 @@
 
 from vars import *
-import MonteCarloTreeSearchNode
+import MCTSNode
 import State
 
 async def task_function(uav):
@@ -29,7 +29,7 @@ class UAV:
 
         color = "green"
         self.circle = c.create_oval(centerToCircle(posx,posy,uavRadius),
-                       fill=color )
+                       fill=color)
     
     def update(self):
         c.coords(self.circle, centerToCircle(self.posx,self.posy,uavRadius))
@@ -44,11 +44,12 @@ class UAV:
         deployments -= 1
         self.fuel = startFuel
 
-        target = chooseTarget()
-        await self.goTo(*target)
+        # target = chooseTarget()
+        # await self.goTo(*target)
             
         while self.fuel > getDist(self.posx, self.posy, center[0], center[1]):
             await self.chooseMove()
+            await asyncio.sleep(3)
         
         await self.goTo(*center)
         await asyncio.sleep(redeploymentTime)
@@ -64,9 +65,13 @@ class UAV:
     
     async def chooseMove(self):
         start_time = time.time()
-        while time.time() - start_time() < 5:
-            startNode = MonteCarloTreeSearchNode(State.initState([self.posx, self.posy], self.fuel))
+        count = 0
+
+        startNode = MCTSNode.MCTSNode(State.State.initState([self.posx, self.posy], self.fuel))
+        UAV.addChildren(startNode)
+        while time.time() - start_time < 0.25:
             self.runMCTS(startNode)
+            count += 1
 
         maxScore = 0
         maxNode = None
@@ -75,10 +80,35 @@ class UAV:
                 maxScore = child.sValue + child.cValue
                 maxNode = child
 
-        move = maxNode.state.current
-        self.goTo(self.posx + move[0]*MCTSmoveDistance, self.posy+move[1]*MCTSmoveDistance)
+        move = maxNode.state.statePos
+        print(maxNode.sValue)
+        await self.goTo(self.posx + move[0]*MCTSmoveDistance, self.posy+move[1]*MCTSmoveDistance)
 
-    async def runMCTS(self, current):
+        ## PUT SERPENTINE ALGORITHM HERE!!!! UPDATE VALUES IN GRID OF ALL TREES VISITED!!!!
+
+        print("Count: ", count)
+
+        print(self.posx + move[0]*MCTSmoveDistance, self.posy+move[1]*MCTSmoveDistance)
+        
+    @staticmethod
+    def addChildren(node):
+        # right, right up, right down, down, up, left, left up, left down
+        #moves = [[1,0], [1,-1], [1,1], [0, 1], [0,-1], [-1,0], [-1,-1], [-1,1]]
+        moves = [[1,0],[-1,0],[0,1],[0,-1]]
+        for move in moves:
+            possible, newState, sValue = node.state.move(move)
+
+            if not possible:
+                continue
+
+            child = MCTSNode.MCTSNode(newState, node)
+            child.sValue = sValue
+
+            node.children.append(child)
+
+        # handle case that there are no possible moves left
+
+    def runMCTS(self, current):
         value = 0
         if len(current.children) == 0:
             if current.number_of_visits == 0:
@@ -89,19 +119,11 @@ class UAV:
 
             else:
                 
-                # right, right up, right down, down, up, left, left up, left down
-                moves = [[1,0], [1,-1], [1,1], [0, 1], [0,-1], [-1,0], [-1,-1], [-1,1]]
+                UAV.addChildren(current)
 
-                for move in moves:
-                    possible, newState, sValue = current.state.move(move)
-
-                    if not possible:
-                        continue
-
-                    child = MonteCarloTreeSearchNode(newState)
-                    child.sValue = sValue
-
-                # handle case that there are no possible moves left
+                # currentPosx = current.state.start[0] + MCTSmoveDistance*current.state.statePos[0]
+                # currentPosy = current.state.start[1] + MCTSmoveDistance*current.state.statePos[1]
+                # print(currentPosx, currentPosy, current.children)
 
                 value = self.runMCTS(current.children[0]) #change to select the child that moves away from start location
                 current.cValue += value

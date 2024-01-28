@@ -17,6 +17,7 @@ import time
 from collections import defaultdict
 import os
 from ssgpr import SSGPR
+import copy
 
 cw = 0.25
 gridx = 4400
@@ -30,15 +31,15 @@ startCenter = [math.ceil(gridx/2)+4, math.ceil(gridy/2)+4]
 
 ti = 0.01
 deployments = 1
-vel = 10
-startFuel = 250
+vel = 100
+startFuel = 25000
 collectionFuelLoss = 10
 collectionTime = 0.1
 redeploymentTime = 0.2
 greedyRange = 10
 
-uavRadius = 0.5
-crRadius = 1
+uavRadius = 10
+# crRadius = 1
 
 #forest gen
 dataProb = 0.3
@@ -46,7 +47,7 @@ heightRange = [0, 100] #in meters, inclusive
 DBHRange = [0, 100]
 trees = []
 
-MCTSmoveDistance = 25
+MCTSmoveDistance = 50
 
 # variable inits
 dataCells = []

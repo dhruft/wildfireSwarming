@@ -1,23 +1,16 @@
 from vars import *
 
 class Cell:
-    def __init__(self, posx, posy, isCR):
+    def __init__(self, posx, posy, height, dbh):
         global c
         c = canvas[0]
 
         self.posx = posx
         self.posy = posy
-        self.isTree = False
-        self.isCR = isCR
-
-        if isCR:
-            self.color = "black"
         self.visited = False
-
-    def initTree(self,height,DBH):
-        self.isTree = True
         self.height = height
-        self.DBH = DBH
+        self.dbh = dbh
+        self.value = random.randint(1,10)
 
     def draw(self):
         self.r = c.create_rectangle(
@@ -45,10 +38,3 @@ class Cell:
 
         rgb = cmap(norm(abs(density)))[:3]  # will return rgba, we take only first 3 so we get rgb
         self.color = matplotlib.colors.rgb2hex(rgb)
-    
-    def setColor(self, color):
-        c.itemconfig(self.r, fill=color)
-
-    # def setCluster(self, clusterNum):
-    #     self.cluster = clusterNum
-    #     c.itemconfig(self.r, fill=clusters[clusterNum]["color"])
