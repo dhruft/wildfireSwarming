@@ -68,7 +68,7 @@ class UAV:
         start_time = time.time()
         count = 0
 
-        startNode = MCTSNode.MCTSNode(State.State.initState([self.posx, self.posy], self.fuel))
+        startNode = MCTSNode.MCTSNode(State.State.initState([self.posx, self.posy], self.fuel, machineMain))
         
         #use this instead of node.children in case child gets removed from tree
         children = UAV.addChildren(startNode)
@@ -81,8 +81,8 @@ class UAV:
         maxScore = 0
         maxNode = None
         for child in children:
-            score = child.sValue + child.cValue
-            print(child.state.statePos, child.sValue, child.cValue)
+            score = child.sValue + child.cValue/child.number_of_visits
+            print(child.state.statePos, child.sValue, child.cValue, child.number_of_visits, child.getUCB1())
             if score > maxScore:
                 maxScore = score
                 maxNode = child
@@ -98,22 +98,22 @@ class UAV:
             for y in range(self.posy+1, self.posy+MCTSmoveDistance+1):
                 for x in range(self.posx-radius, self.posx+radius+1):
                     if isinstance(grid[y-1][x-1], Cell.Cell):
-                        grid[y-1][x-1].value = 0
+                        updateMachine(machineMain, grid[y-1][x-1])
         elif move == [0,-1]:
             for y in range(self.posy-MCTSmoveDistance, self.posy):
                 for x in range(self.posx-radius, self.posx+radius+1):
                     if isinstance(grid[y-1][x-1], Cell.Cell):
-                        grid[y-1][x-1].value = 0
+                        updateMachine(machineMain, grid[y-1][x-1])
         elif move == [-1,0]:
             for x in range(self.posx-MCTSmoveDistance, self.posx):
                 for y in range(self.posy-radius, self.posy+radius+1):
                     if isinstance(grid[y-1][x-1], Cell.Cell):
-                        grid[y-1][x-1].value = 0
+                        updateMachine(machineMain, grid[y-1][x-1])
         elif move == [1,0]:
             for x in range(self.posx+1, self.posx+MCTSmoveDistance+1):
                 for y in range(self.posy-radius, self.posy+radius+1):
                     if isinstance(grid[y-1][x-1], Cell.Cell):
-                        grid[y-1][x-1].value = 0
+                        updateMachine(machineMain, grid[y-1][x-1])
         else:
             print(move)
 

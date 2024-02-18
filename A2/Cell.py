@@ -10,7 +10,6 @@ class Cell:
         self.visited = False
         self.height = height
         self.dbh = dbh
-        self.value = random.randint(1,10)
 
     def draw(self):
         self.r = c.create_rectangle(
@@ -24,16 +23,8 @@ class Cell:
     def visit(self):
         self.visited = True
     
-    def visitT(self):
-        selected_X.append(self.height)
-        selected_Y.append(self.density)
-        selected_z.append(self.DBH)
-
-        c.tag_lower(self.r)
-    
     def setDensity(self, density):
         self.density = density
-        self.value = density ## REMOVE LATER!!!!!
         cmap = cm.cool
         norm = matplotlib.colors.Normalize(vmin=0, vmax=maxDensity)
 

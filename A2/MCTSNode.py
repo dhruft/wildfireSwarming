@@ -8,8 +8,13 @@ class MCTSNode():
         #self.parent_action = parent_action
         self.children = []
         self.number_of_visits = 0
+
+        #child value: value due to value of children
         self.cValue = 0
+
+        #self value due to rollout and move to get to the node (don't divide by number of visit in ucb1)
         self.sValue = 0
+
         self.parent = parent
         self.visited = False
         # self._results = defaultdict(int)
@@ -29,7 +34,7 @@ class MCTSNode():
         #         return 0
         
         #formula from https://www.youtube.com/watch?v=UXW2yZndl7U
-        return self.sValue + self.cValue/self.number_of_visits + 2*math.sqrt(math.log(self.parent.number_of_visits)/self.number_of_visits)
+        return self.cValue/self.number_of_visits + 10*math.sqrt(math.log(self.parent.number_of_visits)/self.number_of_visits)
 
     # def untried_actions(self):
     #     self._untried_actions = self.state.get_legal_actions()

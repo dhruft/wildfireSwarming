@@ -16,7 +16,7 @@ import pandas as pd
 import time
 from collections import defaultdict
 import os
-from ssgpr import SSGPR
+from ssgpr import SSGPR, SparseSpectrumFeatures, LinearGPR, NoPrior
 import copy
 
 cw = 0.25
@@ -32,7 +32,7 @@ startCenter = [math.ceil(gridx/2)+4, math.ceil(gridy/2)+4]
 ti = 0.01
 deployments = 1
 vel = 1000
-startFuel = 10000
+startFuel = 5000
 collectionFuelLoss = 10
 collectionTime = 0.1
 redeploymentTime = 0.2
@@ -53,6 +53,7 @@ MCTSmoveDistance = 100
 dataCells = []
 canvas = [0]
 maxDensity = 22
+maxHeight = 35
 
 # if flip is True, then lower values = higher priority, meaning
 # the normalize function should return larger numbers for lower values
@@ -66,13 +67,31 @@ def normalize(value, vRange, flip=False):
 def getDist(x1,y1,x2,y2):
         return math.sqrt((x2-x1)**2 + (y2-y1)**2)
 
-m, n, p = 20, 2, 1
-machine = SSGPR(n, p, nproj=100)
-machine.sigma_n = 0.2
-assert machine.sigma_n > 0.
-machine.mapping.setparams([0.895, 0.15, 0.1])  # Adjust to provide three parameters
-machine.reset()
+n, p = 2, 1
+nproj = 50
+fixed = True
 
-selected_X = []
-selected_Y = []
-selected_z = []
+# some arbitrary default parameters and no hyperpriors
+sigma_o, sigma_o_prior = 5., NoPrior()
+l, l_prior = [6.] * n, [NoPrior()] * n
+sigma_n, sigma_n_prior = 0.5, NoPrior()
+
+# construct machine and feature mapping
+ssf=SparseSpectrumFeatures(n, nproj=nproj, sigma_o=sigma_o, 
+                                sigma_o_prior=sigma_o_prior, l=l, 
+                                l_prior=l_prior, fixed=fixed)
+machineMain=LinearGPR(n, p, ssf, sigma_n=sigma_n, sigma_n_prior=sigma_n_prior)
+
+selectedX = []
+selectedY = []
+selectedZ = []
+
+def updateMachine(machine, tree):
+    pred, std = machine.update(np.array([tree.height, tree.density]), np.array([tree.dbh]))
+
+    if machine == machineMain:
+        selectedX.append(tree.height)
+        selectedY.append(tree.density)
+        selectedZ.append(tree.dbh)
+
+    return std

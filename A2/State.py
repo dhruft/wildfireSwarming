@@ -2,17 +2,16 @@ from vars import *
 import Cell
 
 class State:
-    def __init__(self, start, fuel, statePos, valueChanges):
+    def __init__(self, start, fuel, statePos, machine):
         self.start = start
         self.fuel = fuel
         self.statePos = statePos
-        self.valueChanges = valueChanges
+        self.machine = machine
 
     @staticmethod
-    def initState(start, fuel):
+    def initState(start, fuel, machine):
         statePos = [0,0]
-        valueChanges = {}
-        initState = State(start, fuel, statePos, valueChanges)
+        initState = State(start, fuel, statePos, machine)
         return initState
     
     def move(self, move):
@@ -38,49 +37,37 @@ class State:
         if fuel <= 0:
             return False, 0, 0
         
+        newMachine = copy.deepcopy(self.machine)
+        
         # posx = min(gridx, max(posx, 1))
         # posy = min(gridy, max(posy, 1))
-
-        newValueChanges = copy.deepcopy(self.valueChanges)
 
         if move == [0,1]:
             for y in range(currentPosy+1, currentPosy+MCTSmoveDistance+1):
                 for x in range(currentPosx-radius, currentPosx+radius+1):
                     if isinstance(grid[y-1][x-1], Cell.Cell):
-                        if (x, y) in self.valueChanges.keys():
-                            sValue += self.valueChanges[(x,y)]
-                        else:
-                            sValue += grid[y-1][x-1].value
-                        newValueChanges[(x,y)] = 0 ## MAYBE NOT ZERO? UNCERTAINTY IN MEASUREMENT
+                        std = updateMachine(newMachine, grid[y-1][x-1])
+                        sValue += std
         elif move == [0,-1]:
             for y in range(currentPosy-MCTSmoveDistance, currentPosy):
                 for x in range(currentPosx-radius, currentPosx+radius+1):
                     if isinstance(grid[y-1][x-1], Cell.Cell):
-                        if (x, y) in self.valueChanges.keys():
-                            sValue += self.valueChanges[(x,y)]
-                        else:
-                            sValue += grid[y-1][x-1].value
-                        newValueChanges[(x,y)] = 0 
+                        std = updateMachine(newMachine, grid[y-1][x-1])
+                        sValue += std
         elif move == [-1,0]:
             for x in range(currentPosx-MCTSmoveDistance, currentPosx):
                 for y in range(currentPosy-radius, currentPosy+radius+1):
                     if isinstance(grid[y-1][x-1], Cell.Cell):
-                        if (x, y) in self.valueChanges.keys():
-                            sValue += self.valueChanges[(x,y)]
-                        else:
-                            sValue += grid[y-1][x-1].value
-                        newValueChanges[(x,y)] = 0 
+                        std = updateMachine(newMachine, grid[y-1][x-1])
+                        sValue += std
         elif move == [1,0]:
             for x in range(currentPosx+1, currentPosx+MCTSmoveDistance+1):
                 for y in range(currentPosy-radius, currentPosy+radius+1):
                     if isinstance(grid[y-1][x-1], Cell.Cell):
-                        if (x, y) in self.valueChanges.keys():
-                            sValue += self.valueChanges[(x,y)]
-                        else:
-                            sValue += grid[y-1][x-1].value
-                        newValueChanges[(x,y)] = 0 
+                        std = updateMachine(newMachine, grid[y-1][x-1])
+                        sValue += std
 
-        newState = State(self.start, fuel, newPos, newValueChanges)
+        newState = State(self.start, fuel, newPos, newMachine)
         
         return True, newState, sValue
     

@@ -51,9 +51,11 @@ def gridInit():
     initTree = newTrees[0]
     initTree.visit()
 
-    selected_X.append(initTree.height)
-    selected_Y.append(initTree.density)
-    selected_z.append(initTree.dbh)
+    updateMachine(machineMain, initTree)
+
+    # selected_X.append(initTree.height)
+    # selected_Y.append(initTree.density)
+    # selected_z.append(initTree.dbh)
 
     # heights = []
     # densities = []
