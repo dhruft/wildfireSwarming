@@ -11,6 +11,7 @@ class MCTSNode():
         self.cValue = 0
         self.sValue = 0
         self.parent = parent
+        self.visited = False
         # self._results = defaultdict(int)
         # self._results[1] = 0
         # self._results[-1] = 0
@@ -19,8 +20,15 @@ class MCTSNode():
         return
     
     def getUCB1(self):
+        ## AVOID DIVIDE BY 0 FOR EXPLORATION
         if self.number_of_visits == 0:
-            return 999999
+                return 999999
+        
+        #this means that there are no moves from this node or that the UAV ran out of fuel 
+        # if self.number_of_visits > 0 and len(self.children) == 0:
+        #         return 0
+        
+        #formula from https://www.youtube.com/watch?v=UXW2yZndl7U
         return self.sValue + self.cValue/self.number_of_visits + 2*math.sqrt(math.log(self.parent.number_of_visits)/self.number_of_visits)
 
     # def untried_actions(self):

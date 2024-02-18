@@ -31,8 +31,8 @@ startCenter = [math.ceil(gridx/2)+4, math.ceil(gridy/2)+4]
 
 ti = 0.01
 deployments = 1
-vel = 100
-startFuel = 25000
+vel = 1000
+startFuel = 10000
 collectionFuelLoss = 10
 collectionTime = 0.1
 redeploymentTime = 0.2
@@ -47,7 +47,7 @@ heightRange = [0, 100] #in meters, inclusive
 DBHRange = [0, 100]
 trees = []
 
-MCTSmoveDistance = 50
+MCTSmoveDistance = 100
 
 # variable inits
 dataCells = []

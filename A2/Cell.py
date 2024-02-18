@@ -33,6 +33,7 @@ class Cell:
     
     def setDensity(self, density):
         self.density = density
+        self.value = density ## REMOVE LATER!!!!!
         cmap = cm.cool
         norm = matplotlib.colors.Normalize(vmin=0, vmax=maxDensity)
 
