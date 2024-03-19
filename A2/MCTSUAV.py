@@ -52,12 +52,14 @@ class UAV:
             
         while self.fuel > getDist(self.posx, self.posy, center[0], center[1]):
             await self.chooseMove()
-            await asyncio.sleep(3)
         
-        await self.goTo(*center)
-        await asyncio.sleep(redeploymentTime)
+        for tree in trees:
+            std = getSTD(machineMain, tree)
+            tree.colorScale(std, 0, 25)
 
-        # updatePlot()
+        
+        # await self.goTo(*center)
+        # await asyncio.sleep(redeploymentTime)
 
         if deployments > 0:
             await self.mainLoop()
@@ -73,7 +75,7 @@ class UAV:
         #use this instead of node.children in case child gets removed from tree
         children = UAV.addChildren(startNode)
 
-        while time.time() - start_time < 0.25:
+        while time.time() - start_time < 5:
             if (self.runMCTS(startNode) == -2):
                 break
             count += 1
@@ -81,45 +83,75 @@ class UAV:
         maxScore = 0
         maxNode = None
         for child in children:
-            score = child.sValue + child.cValue/child.number_of_visits
+            score = child.sValue*0.25 + 0.75*child.cValue/child.number_of_visits
+
+            temp = child
+            while temp != None and len(temp.children) > 0:
+                mScore = -1
+                mNode = None
+                for c in temp.children:
+                    if c.number_of_visits == 0:
+                        s = c.sValue
+                    else:
+                        s = c.sValue*0.25+ 0.75*c.cValue/c.number_of_visits
+                    if s > mScore:
+                        mScore = s
+                        mNode = c
+                temp = mNode
+                if temp == None:
+                    break
+                print(temp.state.statePos, len(temp.children), temp.sValue, temp.cValue)
+
             print(child.state.statePos, child.sValue, child.cValue, child.number_of_visits, child.getUCB1())
             if score > maxScore:
                 maxScore = score
                 maxNode = child
 
-        move = maxNode.state.statePos
+        try:
+            move = maxNode.state.statePos
+        except:
+            self.fuel = 0
+            return
         print(maxNode.sValue)
         
         #newPos = [move[0]*MCTSmoveDistance+self.posx, move[1]*MCTSmoveDistance+self.posy]
-        radius = 5
-
         ## PUT SERPENTINE ALGORITHM HERE!!!! UPDATE VALUES IN GRID OF ALL TREES VISITED!!!!
         if move == [0,1]:
             for y in range(self.posy+1, self.posy+MCTSmoveDistance+1):
                 for x in range(self.posx-radius, self.posx+radius+1):
                     if isinstance(grid[y-1][x-1], Cell.Cell):
-                        updateMachine(machineMain, grid[y-1][x-1])
+                        self.visitTree(grid[y-1][x-1])
         elif move == [0,-1]:
             for y in range(self.posy-MCTSmoveDistance, self.posy):
                 for x in range(self.posx-radius, self.posx+radius+1):
                     if isinstance(grid[y-1][x-1], Cell.Cell):
-                        updateMachine(machineMain, grid[y-1][x-1])
+                        self.visitTree(grid[y-1][x-1])
         elif move == [-1,0]:
             for x in range(self.posx-MCTSmoveDistance, self.posx):
                 for y in range(self.posy-radius, self.posy+radius+1):
                     if isinstance(grid[y-1][x-1], Cell.Cell):
-                        updateMachine(machineMain, grid[y-1][x-1])
+                        self.visitTree(grid[y-1][x-1])
         elif move == [1,0]:
             for x in range(self.posx+1, self.posx+MCTSmoveDistance+1):
                 for y in range(self.posy-radius, self.posy+radius+1):
                     if isinstance(grid[y-1][x-1], Cell.Cell):
-                        updateMachine(machineMain, grid[y-1][x-1])
+                        self.visitTree(grid[y-1][x-1])
         else:
             print(move)
 
         await self.goTo(self.posx + move[0]*MCTSmoveDistance, self.posy+move[1]*MCTSmoveDistance)
         print(self.fuel)
         print("MCTS Iterations Count: ", count)
+
+    def visitTree(self, tree):
+        tree.visited = True
+        
+        std = getSTD(machineMain, tree)
+        if std > 3:
+            tree.selected = True
+            updateMachine(machineMain, tree)
+            tree.setColor()
+        print(std)
         
     @staticmethod
     def addChildren(node):
@@ -153,7 +185,6 @@ class UAV:
                 value += current.sValue
             elif current.number_of_visits == 1:
                 UAV.addChildren(current)
-
                 # if no possible moves remove node from tree
                 if len(current.children) == 0:
                     current.parent.children.remove(current)
@@ -163,7 +194,7 @@ class UAV:
                 # currentPosy = current.state.start[1] + MCTSmoveDistance*current.state.statePos[1]
                 # print(currentPosx, currentPosy, current.children)
 
-                value = self.runMCTS(current.children[0]) #change to select the child that moves away from start location
+                value = self.runMCTS(current.children[0])
                 current.cValue += value
             else:
                 if current.state.statePos == [0,0]:
@@ -181,13 +212,12 @@ class UAV:
                     maxNode = child
 
             value = self.runMCTS(maxNode)
+            if value < 0:
+                return -1
             current.cValue += value
-
-        if value == -1:
-            return value
-        else:
-            current.number_of_visits += 1
-            return value
+        
+        current.number_of_visits += 1
+        return value
 
     async def goTo(self, x, y):
         self.target = [x,y]

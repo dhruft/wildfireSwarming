@@ -32,7 +32,7 @@ startCenter = [math.ceil(gridx/2)+4, math.ceil(gridy/2)+4]
 ti = 0.01
 deployments = 1
 vel = 1000
-startFuel = 5000
+startFuel = 10000
 collectionFuelLoss = 10
 collectionTime = 0.1
 redeploymentTime = 0.2
@@ -46,6 +46,7 @@ dataProb = 0.3
 heightRange = [0, 100] #in meters, inclusive
 DBHRange = [0, 100]
 trees = []
+radius = 50
 
 MCTSmoveDistance = 100
 
@@ -73,7 +74,7 @@ fixed = True
 
 # some arbitrary default parameters and no hyperpriors
 sigma_o, sigma_o_prior = 5., NoPrior()
-l, l_prior = [6.] * n, [NoPrior()] * n
+l, l_prior = [3.] * n, [NoPrior()] * n
 sigma_n, sigma_n_prior = 0.5, NoPrior()
 
 # construct machine and feature mapping
@@ -85,6 +86,10 @@ machineMain=LinearGPR(n, p, ssf, sigma_n=sigma_n, sigma_n_prior=sigma_n_prior)
 selectedX = []
 selectedY = []
 selectedZ = []
+
+def getSTD(machine, tree):
+    pred, std = machine.predict(np.array([tree.height, tree.density]))
+    return std
 
 def updateMachine(machine, tree):
     pred, std = machine.update(np.array([tree.height, tree.density]), np.array([tree.dbh]))

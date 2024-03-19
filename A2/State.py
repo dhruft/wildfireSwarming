@@ -1,6 +1,11 @@
 from vars import *
 import Cell
 
+def getSValue(std):
+    if std < 3:
+        return 0
+    return std
+
 class State:
     def __init__(self, start, fuel, statePos, machine):
         self.start = start
@@ -28,7 +33,6 @@ class State:
         # make fuel usage a prediction based on sValue
         fuel = self.fuel - getDist(posx, posy, currentPosx, currentPosy)
 
-        radius = 5
         sValue = 0
 
         if posx < 1 + radius or posx > gridx - radius or posy < 1 + radius or posy > gridy - radius:
@@ -46,29 +50,40 @@ class State:
             for y in range(currentPosy+1, currentPosy+MCTSmoveDistance+1):
                 for x in range(currentPosx-radius, currentPosx+radius+1):
                     if isinstance(grid[y-1][x-1], Cell.Cell):
-                        std = updateMachine(newMachine, grid[y-1][x-1])
-                        sValue += std
+                        if grid[y-1][x-1].visited:
+                            continue
+                        std = getSTD(newMachine, grid[y-1][x-1])
+                        updateMachine(newMachine, grid[y-1][x-1])
+                        sValue += getSValue(std)
         elif move == [0,-1]:
             for y in range(currentPosy-MCTSmoveDistance, currentPosy):
                 for x in range(currentPosx-radius, currentPosx+radius+1):
                     if isinstance(grid[y-1][x-1], Cell.Cell):
-                        std = updateMachine(newMachine, grid[y-1][x-1])
-                        sValue += std
+                        if grid[y-1][x-1].visited:
+                            continue
+                        std = getSTD(newMachine, grid[y-1][x-1])
+                        updateMachine(newMachine, grid[y-1][x-1])
+                        sValue += getSValue(std)
         elif move == [-1,0]:
             for x in range(currentPosx-MCTSmoveDistance, currentPosx):
                 for y in range(currentPosy-radius, currentPosy+radius+1):
                     if isinstance(grid[y-1][x-1], Cell.Cell):
-                        std = updateMachine(newMachine, grid[y-1][x-1])
-                        sValue += std
+                        if grid[y-1][x-1].visited:
+                            continue
+                        std = getSTD(newMachine, grid[y-1][x-1])
+                        updateMachine(newMachine, grid[y-1][x-1])
+                        sValue += getSValue(std)
         elif move == [1,0]:
             for x in range(currentPosx+1, currentPosx+MCTSmoveDistance+1):
                 for y in range(currentPosy-radius, currentPosy+radius+1):
                     if isinstance(grid[y-1][x-1], Cell.Cell):
-                        std = updateMachine(newMachine, grid[y-1][x-1])
-                        sValue += std
-
+                        if grid[y-1][x-1].visited:
+                            continue
+                        std = getSTD(newMachine, grid[y-1][x-1])
+                        updateMachine(newMachine, grid[y-1][x-1])
+                        sValue += getSValue(std)
         newState = State(self.start, fuel, newPos, newMachine)
-        
+
         return True, newState, sValue
     
     def calculateRollout(self):

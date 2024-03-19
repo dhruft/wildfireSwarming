@@ -22,6 +22,8 @@ def gridInit():
 
     data = pd.read_csv(csv_file, encoding="iso-8859-1")
 
+    tempTrees = []
+
     for index, row in data.iterrows():
     
         height = row["Height_m"]
@@ -32,12 +34,11 @@ def gridInit():
         tree = Cell.Cell(posx, posy, height, dbh)
         startGrid[posy-1][posx-1] = tree
 
-        trees.append(tree)
+        tempTrees.append(tree)
     
-    assignDensities()
+    assignDensities(tempTrees)
 
-    newTrees = []
-    for tree in trees:
+    for tree in tempTrees:
         
         if tree.posx >= 5 and tree.posx <= startGridx-4 and tree.posy >= 5 and tree.posy <= startGridx-4:
         
@@ -46,45 +47,41 @@ def gridInit():
             grid[tree.posy-1][tree.posx-1] = tree
 
             tree.draw()
-            newTrees.append(tree)
+            trees.append(tree)
     
-    initTree = newTrees[0]
-    initTree.visit()
+    initTree = trees[0]
+    initTree.visited = True
 
     updateMachine(machineMain, initTree)
 
-    # selected_X.append(initTree.height)
-    # selected_Y.append(initTree.density)
-    # selected_z.append(initTree.dbh)
+    heights = []
+    densities = []
+    dbhs = []
+    for tree in trees:
+        heights.append(tree.height)
+        densities.append(tree.density)
+        dbhs.append(tree.dbh)
 
-    # heights = []
-    # densities = []
-    # dbhs = []
-    # for tree in newTrees:
-    #     heights.append(tree.height)
-    #     densities.append(tree.density)
-    #     dbhs.append(tree.dbh)
+    # Create a 3D scatter plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
 
-    # # Create a 3D scatter plot
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
+    # Scatter plot with x, y, and z coordinates
+    ax.scatter(heights, densities, dbhs, c='r', marker='o')
 
-    # # Scatter plot with x, y, and z coordinates
-    # ax.scatter(heights, densities, dbhs, c='r', marker='o')
+    # Set labels for the axes
+    ax.set_xlabel('Height')
+    ax.set_ylabel('Density')
+    ax.set_zlabel('DBH')
 
-    # # Set labels for the axes
-    # ax.set_xlabel('Height')
-    # ax.set_ylabel('Density')
-    # ax.set_zlabel('DBH')
-
-    # # Show the plot
-    # plt.show()
+    # Show the plot
+    plt.show()
 
 class Filler:
     def __init__(self):
         self.isTree = 0
 
-def assignDensities():
+def assignDensities(tempTrees):
     kernel = np.array([
                         [1, 1, 1, 1, 1, 1, 1, 1, 1],
                         [1, 2, 2, 2, 2, 2, 2, 2, 1],
@@ -101,7 +98,7 @@ def assignDensities():
     filler = Filler()
     padded_grid = np.pad(startGrid, ((4, 4), (4, 4)), mode='constant', constant_values=filler)
 
-    for tree in trees:
+    for tree in tempTrees:
         if tree.posx <=3 or tree.posy <= 3:
             continue
 

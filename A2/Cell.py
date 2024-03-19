@@ -18,10 +18,6 @@ class Cell:
                 fill=self.color,
                 outline=self.color)
         c.tag_lower(self.r)
-
-    #CHANGE PLS
-    def visit(self):
-        self.visited = True
     
     def setDensity(self, density):
         self.density = density
@@ -30,3 +26,17 @@ class Cell:
 
         rgb = cmap(norm(abs(density)))[:3]  # will return rgba, we take only first 3 so we get rgb
         self.color = matplotlib.colors.rgb2hex(rgb)
+    
+    def colorScale(self, value, min, max):
+        cmap = cm.cool
+        norm = matplotlib.colors.Normalize(vmin=min, vmax=max)
+
+        rgb = cmap(norm(abs(value)))[:3]  # will return rgba, we take only first 3 so we get rgb
+        self.color = matplotlib.colors.rgb2hex(rgb)
+
+        c.itemconfig(self.r, fill=self.color)
+        c.itemconfig(self.r, outline=self.color)
+    
+    def setColor(self):
+        c.itemconfig(self.r, fill="red")
+        c.itemconfig(self.r, outline="red")

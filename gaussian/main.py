@@ -95,8 +95,8 @@ class App(object):
         z_pred = z_pred.reshape(x_grid.shape)
         z_std = z_std.reshape(y_grid.shape)*3
         ax.plot_surface(x_grid, y_grid, z_pred, color ='r', alpha=0.5, label='GP Predictions')
-        ax.plot_surface(x_grid, y_grid, z_pred + z_std, color='b', alpha=0.3)
-        ax.plot_surface(x_grid, y_grid, z_pred - z_std, color='b', alpha=0.3)
+        #ax.plot_surface(x_grid, y_grid, z_pred + z_std, color='b', alpha=0.3)
+        #ax.plot_surface(x_grid, y_grid, z_pred - z_std, color='b', alpha=0.3)
 
         # Customize labels and legend
         ax.set_xlabel('Height')
