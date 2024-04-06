@@ -50,32 +50,32 @@ def gridInit():
             trees.append(tree)
     
     initTree = trees[0]
-    initTree.visited = True
+    initTree.visit(True, heatmap)
 
-    updateMachine(machineMain, initTree)
+    #updateMachine(machineMain, initTree)
 
-    heights = []
-    densities = []
-    dbhs = []
-    for tree in trees:
-        heights.append(tree.height)
-        densities.append(tree.density)
-        dbhs.append(tree.dbh)
+    # heights = []
+    # densities = []
+    # dbhs = []
+    # for tree in trees:
+    #     heights.append(tree.height)
+    #     densities.append(tree.density)
+    #     dbhs.append(tree.dbh)
 
-    # Create a 3D scatter plot
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    # # Create a 3D scatter plot
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
 
-    # Scatter plot with x, y, and z coordinates
-    ax.scatter(heights, densities, dbhs, c='r', marker='o')
+    # # Scatter plot with x, y, and z coordinates
+    # ax.scatter(heights, densities, dbhs, c='r', marker='o')
 
-    # Set labels for the axes
-    ax.set_xlabel('Height')
-    ax.set_ylabel('Density')
-    ax.set_zlabel('DBH')
+    # # Set labels for the axes
+    # ax.set_xlabel('Height')
+    # ax.set_ylabel('Density')
+    # ax.set_zlabel('DBH')
 
-    # Show the plot
-    plt.show()
+    # # Show the plot
+    # plt.show()
 
 class Filler:
     def __init__(self):
