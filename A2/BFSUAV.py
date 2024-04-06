@@ -77,6 +77,11 @@ class UAV:
 
     
     async def chooseMove(self):
+        for height in range(maxHeight+1):
+            for density in range(maxDensity+1):
+                pred, std = machineMain.predict(np.array([height, density]))
+                heatmap[int(tree.height)][tree.density] = normalize(pred, [0, 50], flip=True)
+
         start_time = time.time()
         count = 0
 
@@ -146,6 +151,9 @@ class UAV:
                         treeValue = 1 - heatmap[int(tree.height)][tree.density]
                         if tree.visited or treeValue < valueThreshold:
                             continue
+                        input = np.array([tree.height, tree.density])
+                        z = np.array([tree.dbh])
+                        machineMain.update(input, z)
                         tree.visit(True, heatmap)
         elif move == [0,-1]:
             for y in range(self.posy-moveDistance, self.posy):
@@ -155,6 +163,9 @@ class UAV:
                         treeValue = 1 - heatmap[int(tree.height)][tree.density]
                         if tree.visited or treeValue < valueThreshold:
                             continue
+                        input = np.array([tree.height, tree.density])
+                        z = np.array([tree.dbh])
+                        machineMain.update(input, z)
                         tree.visit(True, heatmap)
         elif move == [-1,0]:
             for x in range(self.posx-moveDistance, self.posx):
@@ -164,6 +175,9 @@ class UAV:
                         treeValue = 1 - heatmap[int(tree.height)][tree.density]
                         if tree.visited or treeValue < valueThreshold:
                             continue
+                        input = np.array([tree.height, tree.density])
+                        z = np.array([tree.dbh])
+                        machineMain.update(input, z)
                         tree.visit(True, heatmap)
         elif move == [1,0]:
             for x in range(self.posx+1, self.posx+moveDistance+1):
@@ -173,6 +187,9 @@ class UAV:
                         treeValue = 1 - heatmap[int(tree.height)][tree.density]
                         if tree.visited or treeValue < valueThreshold:
                             continue
+                        input = np.array([tree.height, tree.density])
+                        z = np.array([tree.dbh])
+                        machineMain.update(input, z)
                         tree.visit(True, heatmap)
         else:
             print(move)

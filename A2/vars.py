@@ -70,38 +70,38 @@ def normalize(value, vRange, flip=False):
 def getDist(x1,y1,x2,y2):
         return math.sqrt((x2-x1)**2 + (y2-y1)**2)
 
-# n, p = 2, 1
-# nproj = 50
-# fixed = True
+n, p = 2, 1
+nproj = 50
+fixed = True
 
-# # some arbitrary default parameters and no hyperpriors
-# sigma_o, sigma_o_prior = 5., NoPrior()
-# l, l_prior = [3.] * n, [NoPrior()] * n
-# sigma_n, sigma_n_prior = 0.5, NoPrior()
+# some arbitrary default parameters and no hyperpriors
+sigma_o, sigma_o_prior = 5., NoPrior()
+l, l_prior = [3.] * n, [NoPrior()] * n
+sigma_n, sigma_n_prior = 0.5, NoPrior()
 
-# # construct machine and feature mapping
-# ssf=SparseSpectrumFeatures(n, nproj=nproj, sigma_o=sigma_o, 
-#                                 sigma_o_prior=sigma_o_prior, l=l, 
-#                                 l_prior=l_prior, fixed=fixed)
-# machineMain=LinearGPR(n, p, ssf, sigma_n=sigma_n, sigma_n_prior=sigma_n_prior)
+# construct machine and feature mapping
+ssf=SparseSpectrumFeatures(n, nproj=nproj, sigma_o=sigma_o, 
+                                sigma_o_prior=sigma_o_prior, l=l, 
+                                l_prior=l_prior, fixed=fixed)
+machineMain=LinearGPR(n, p, ssf, sigma_n=sigma_n, sigma_n_prior=sigma_n_prior)
 
 selectedX = []
 selectedY = []
 selectedZ = []
 
-# def getSTD(machine, tree):
-#     pred, std = machine.predict(np.array([tree.height, tree.density]))
-#     return std
+def getSTD(machine, tree):
+    pred, std = machine.predict(np.array([tree.height, tree.density]))
+    return std
 
-# def updateMachine(machine, tree):
-#     pred, std = machine.update(np.array([tree.height, tree.density]), np.array([tree.dbh]))
+def updateMachine(machine, tree):
+    pred, std = machine.update(np.array([tree.height, tree.density]), np.array([tree.dbh]))
 
-#     if machine == machineMain:
-#         selectedX.append(tree.height)
-#         selectedY.append(tree.density)
-#         selectedZ.append(tree.dbh)
+    if machine == machineMain:
+        selectedX.append(tree.height)
+        selectedY.append(tree.density)
+        selectedZ.append(tree.dbh)
 
-#     return std
+    return std
 
 heatmap = np.zeros(shape=(maxHeight+1, maxDensity + 1))
 densityInsertRadius = 1
